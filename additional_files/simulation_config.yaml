@@ -1,0 +1,16 @@
+constructor:
+  input: gdml # "gdml" or "predefined". If predefined is chosen additional parameters are required.
+  gdml_file: "detector.gdml" # Path to the GDML file
+  predefined:
+    geometry: "flat" # "curved" or "flat". Geometry of the detector
+    # If the geometry is curved then we need to define the Earth's radius
+    earth_radius: 6371 # Earth's radius in km
+    # In both cases we have to define the size of the atmosphere
+    atmos_size: 100 # Atmosphere size in km. It will be the arc lenght at the surface of the Earth for the curved geometry and 
+                    # the square side for the flat geometry
+    atmos_height: 70 # Atmosphere height in km
+    atmos_comp: ["N", 70, "O", 27, "Ar", 3] # Material of the atmosphere
+    atmos_density: "from_file" # "from_file" or "auto".
+    atmos_from_file: "additional_files/density_temp_height.csv" # Path to the CSV file with the density profile
+    atmos_n_points: 10 # Number of points in the density profile
+    
