@@ -19,10 +19,6 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         self.material, self.world_material = self.define_materials()
 
     def Construct(self):
-        solidWorld = G4Box("solidWorld", self.size / 2, self.size / 2, self.atmosphere_height / 2)
-        logicWorld = G4LogicalVolume(solidWorld, self.world_material, "logicWorld")
-        physWorld = G4PVPlacement(None, G4ThreeVector(), logicWorld, "physWorld", None , False, 0, True)
-        return physWorld
         # Define the world volume
         if self.shape == "flat":
             world_volume = self.construct_flat_world()
