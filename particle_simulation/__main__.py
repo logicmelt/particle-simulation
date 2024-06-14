@@ -16,7 +16,7 @@ def main():
     runManager = G4RunManagerFactory.CreateRunManager(G4RunManagerType.Serial)
 
     # Load the geometry
-    runManager.SetUserInitialization(DetectorConstruction(config["constructor"]["predefined"]))
+    runManager.SetUserInitialization(DetectorConstruction(config))
     # Physics list
     runManager.SetUserInitialization(QGSP_BERT_HP())
 
@@ -27,7 +27,6 @@ def main():
     visManager.Initialize()
     # Create an instance of the UI manager
     uiManager = G4UImanager.GetUIpointer()
-    uiManager.ApplyCommand("/control/execute vis.mac")
     ui.SessionStart()
 
 if __name__ == "__main__":
