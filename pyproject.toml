@@ -12,6 +12,7 @@ geant4-pybind = "^0.1.0b17"
 pyyaml = "^6.0.1"
 pandas = "^2.2.2"
 matplotlib = "^3.9.0"
+requests = "^2.32.3"
 
 
 [tool.poetry.group.dev.dependencies]

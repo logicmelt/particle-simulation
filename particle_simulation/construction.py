@@ -1,6 +1,6 @@
-from geant4_pybind import G4VUserDetectorConstruction, G4NistManager, G4State, G4Material, G4GDMLParser, G4VUserDetectorConstruction, G4Box, G4Sphere, G4LogicalVolume, G4PVPlacement, G4ThreeVector
+from geant4_pybind import G4VUserDetectorConstruction, G4NistManager, G4State, G4Material, G4GDMLParser, G4VUserDetectorConstruction, G4Box, G4Sphere, G4LogicalVolume, G4PVPlacement, G4ThreeVector, G4MagneticField, G4UniformMagField, G4FieldManager
 # Import units
-from geant4_pybind import kelvin, kg, m3, perCent, radian, km
+from geant4_pybind import kelvin, kg, m3, perCent, radian, km, tesla
 import pandas as pd
 import numpy as np
 import pathlib
@@ -10,7 +10,11 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         super().__init__()
         self.config = config["constructor"]
         self.save_dir = config["save_dir"]
-        
+        self.logic_volume = None
+
+        # Magnetic field 
+        self.mag_field = self.parse_magnetic_field(self.config["mag_file"])
+
         # GDML parser
         self.gdml_parser = G4GDMLParser()
 
@@ -27,7 +31,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             self.export_gdml = self.config["custom"].get("export_gdml", False)
 
             # Define the density, temperature and materials
-            self.density, self.temp = self.parse_density_temp_from_config()
+            self.density, self.temp, self.height = self.parse_density_temp_from_config()
             self.material, self.world_material = self.define_materials()
 
     def Construct(self):
@@ -39,9 +43,9 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         
         # Define the world volume
         if self.shape == "flat":
-            world_volume = self.construct_flat_world()
+            world_volume, logic_volume = self.construct_flat_world()
         else:
-            world_volume = self.construct_spherical_world()
+            world_volume, logic_volume = self.construct_spherical_world()
         
         # Export the geometry to a GDML file
         if self.export_gdml:
@@ -51,8 +55,28 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             self.gdml_parser.Write(str(outputPath), world_volume)
             # We want to export it once, not every time the Construct method is called
             self.export_gdml = False
-        
+
+        self.logic_volume = logic_volume
         return world_volume
+    
+    def ConstructSDandField(self):
+        # Add sensitive detectors and magnetic fields if any
+        if self.mag_field is not None:
+            for i in range(self.density_points):
+                mag_x, mag_y, mag_z = self.mag_field[i]
+                magField = G4UniformMagField(G4ThreeVector(mag_x*tesla, mag_y*tesla, mag_z*tesla))
+                locField = G4FieldManager(magField)
+                # Add the magnetic field to the logic volume
+                self.logic_volume[i].SetFieldManager(locField, True)
+
+    def parse_magnetic_field(self, mag_file: str):
+        # Parse the magnetic field from a file
+        if mag_file == "none":
+            return None
+        else:
+            open_csv = pd.read_csv(mag_file)
+            # Return the magnetic field as a numpy array in Tesla
+            return np.array(open_csv[["x", "y", "z"]] * 1e-9)
 
     def construct_flat_world(self):
         # Construct a flat world volume including all the layers of the atmosphere
@@ -82,8 +106,8 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                           False, 
                           i, 
                           True)
-        
-        return physWorld
+            
+        return physWorld, logicAtmos
     
     def construct_spherical_world(self):
         # Earth radius
@@ -117,7 +141,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                           i, 
                           True)
             
-        return physWorld
+        return physWorld, logicAtmos
 
     def define_materials(self):
         # Define materials from the config file using the Nist manager
@@ -158,10 +182,11 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             density = np.array(df["rho/(kg/m3)"])
 
             # Interpolate the density and temperature to the height of the atmosphere
-            density = np.interp(np.linspace(0, self.atmosphere_height, self.density_points), height, density)
-            temp = np.interp(np.linspace(0, self.atmosphere_height, self.density_points), height, temp)
+            inter_height = np.linspace(0, self.atmosphere_height, self.density_points)
+            density = np.interp(inter_height, height, density)
+            temp = np.interp(inter_height, height, temp)
 
-            return density, temp
+            return density, temp, inter_height
         
         else:
             raise NotImplementedError("Only 'from_file' is supported for 'atmos_density' in the config file.")
