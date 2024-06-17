@@ -1,4 +1,13 @@
 save_dir: "test_data/" # Directory where the output files will be saved
+generator:
+  type: "particle_gun" # "gps" or "particle_gun". GPS parameters are given through a macro file
+  macro_file: "additional_files/gps.mac" # Path to the macro file
+  parameters: # Parameters for the particle gun (Initial values that can be changed in the macro file)
+    n_events: 1000 # Number of events to be generated per run
+    energy: 1 # Energy of the primary particle in GeV
+    particle: "gamma" # Particle type
+    position: [0, 0, 0] # Initial position of the primary particle
+    direction: [0, 0, 1] # Direction of the momentum of the primary particle
 constructor:
   input: gdml # "gdml" or "custom". If custom is chosen additional parameters are required.
   gdml_file: "test_data/geometry_flat.gdml" # Path to the GDML file
