@@ -1,4 +1,4 @@
-from geant4_pybind import G4VUserDetectorConstruction, G4NistManager, G4State, G4Material, G4GDMLParser, G4VUserDetectorConstruction, G4Box, G4Sphere, G4LogicalVolume, G4PVPlacement, G4ThreeVector, G4MagneticField, G4UniformMagField, G4FieldManager
+from geant4_pybind import G4VUserDetectorConstruction, G4NistManager, G4State, G4Material, G4GDMLParser, G4VUserDetectorConstruction, G4Box, G4Sphere, G4LogicalVolume, G4PVPlacement, G4ThreeVector, G4UniformMagField, G4FieldManager
 # Import units
 from geant4_pybind import kelvin, kg, m3, perCent, radian, km, tesla
 import pandas as pd
@@ -20,6 +20,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
 
         if self.config["input"] == "gdml":
             self.gdml_file = self.config["gdml_file"]
+            self.density_points = None
         else:
             # Get some parameters as attributes
             self.density_points = self.config["custom"]["atmos_n_points"]
@@ -35,11 +36,23 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             self.material, self.world_material = self.define_materials()
 
     def Construct(self):
+        # TODO: Reading from GDML files is a pain in the back. If the GDML file is generated using this package we are ok
+        # otherwise we need to check the order and height so that we can associate the correct value of the magnetic field.
+        
         # Construct the geometry
         if self.config["input"] == "gdml":
             # Load the geometry from a GDML file
             self.gdml_parser.Read(self.gdml_file)
-            return self.gdml_parser.GetWorldVolume()
+            # The number of layers is the number of daughters of the world volume
+            self.density_points = self.gdml_parser.GetWorldVolume().GetLogicalVolume().GetNoDaughters()
+            world_volume = self.gdml_parser.GetWorldVolume()
+
+            # Get the logical volumes of the layers
+            self.logic_volume = np.zeros(self.density_points, dtype=object)
+            for i in range(self.density_points):
+                self.logic_volume[i] = world_volume.GetLogicalVolume().GetDaughter(i).GetLogicalVolume()
+
+            return world_volume
         
         # Define the world volume
         if self.shape == "flat":
