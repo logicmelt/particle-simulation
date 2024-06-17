@@ -1,5 +1,6 @@
 from geant4_pybind import G4UImanager, G4UIExecutive, G4RunManagerFactory, G4RunManagerType, G4VisExecutive, QGSP_BERT_HP
 from particle_simulation.construction import DetectorConstruction
+from particle_simulation.action import ActionInitialization
 import yaml
 
 def load_config(config_file):
@@ -19,6 +20,8 @@ def main():
     runManager.SetUserInitialization(DetectorConstruction(config))
     # Physics list
     runManager.SetUserInitialization(QGSP_BERT_HP())
+    # Run action
+    runManager.SetUserInitialization(ActionInitialization(config))
 
     # Initialize the run manager
     runManager.Initialize()

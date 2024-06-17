@@ -36,8 +36,8 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             self.material, self.world_material = self.define_materials()
 
     def Construct(self):
-        # TODO: Reading from GDML files is a pain in the back. If the GDML file is generated using this package we are ok
-        # otherwise we need to check the order and height so that we can associate the correct value of the magnetic field.
+        # TODO: Reading from GDML files is a pain in the back. If the GDML file is generated using this package we are ok,
+        # otherwise we need to check the order and altitude so that we can associate the correct value of the magnetic field.
         
         # Construct the geometry
         if self.config["input"] == "gdml":
