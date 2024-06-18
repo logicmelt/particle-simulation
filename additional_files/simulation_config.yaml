@@ -1,20 +1,30 @@
 save_dir: "test_data/" # Directory where the output files will be saved
-run_macro: "additional_files/run.mac" # Path to the macro file that will be executed
+macro_files: ["additional_files/vis.mac"] # Path to the macro files that will be executed, order matters if more than one
+
+# Particle generator
 generator:
   type: "particle_gun" # "gps" or "particle_gun". GPS parameters are given through a macro file
-  macro_file: "additional_files/gps.mac" # Path to the macro file
   parameters: # Parameters for the particle gun (Initial values that can be changed in the macro file)
     n_events: 1 # Number of events to be generated per run
-    energy: 1 # Energy of the primary particle in GeV
-    particle: "gamma" # Particle type
+    energy: 100 # Energy of the primary particle in GeV
+    particle: "proton" # Particle type
     position: [0, 0, 70] # Initial position of the primary particle in km
     direction: [0, 0, -1] # Direction of the momentum of the primary particle
+  
+# Detector
 constructor:
   input: custom # "gdml" or "custom". If custom is chosen additional parameters are required.
   gdml_file: "test_data/geometry_flat.gdml" # Path to the GDML file
   mag_file: "test_data/mag_field_vigo.csv" # Path to the magnetic field file or "none" if no magnetic field is used
+
+  sensitive_detectors:
+    altitude: [0] # Altitude of the sensitive detectors in km
+    particles: ["proton", "e-", "mu-", "geantino", "chargedgeantino"] # List of particles that will be recorded in the sensitive detectors. 
+                                                                      #"all" for all particles.
+
+  # Parameters used to generate the custom geometry
   custom:
-    export_gdml: False # Export the detector to a GDML file
+    export_gdml: True # Export the detector to a GDML file
     geometry: "flat" # "curved" or "flat". Geometry of the detector
     # If the geometry is curved then we need to define the Earth's radius
     earth_radius: 6371 #6371 # Earth's radius in km
@@ -25,5 +35,5 @@ constructor:
     atmos_comp: ["N", 70, "O", 27, "Ar", 3] # Material of the atmosphere
     atmos_density: "from_file" # "from_file" or "auto".
     atmos_from_file: "additional_files/density_temp_height.csv" # Path to the CSV file with the density profile
-    atmos_n_points: 100 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
+    atmos_n_points: 10 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
     

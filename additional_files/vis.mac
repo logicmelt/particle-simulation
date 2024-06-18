@@ -1,0 +1,19 @@
+# Use OpenGL
+/vis/open TSG_OFFSCREEN
+# Add the volumes
+/vis/drawVolume
+# Change camera's initial position
+/vis/viewer/set/viewpointVector 1 1 1
+# Plot the trajectories
+/vis/scene/add/trajectories smooth
+# Plot a 1km scale
+/vis/scene/add/scale 10 km
+# Plot axes
+/vis/scene/add/axes
+# By using this command the visualized events per run will accumulate instead of being removed
+/vis/scene/endOfEventAction accumulate
+
+/run/beamOn 1000
+
+/vis/viewer/refresh
+

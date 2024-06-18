@@ -4,6 +4,8 @@ from geant4_pybind import kelvin, kg, m3, perCent, radian, km, tesla
 import pandas as pd
 import numpy as np
 import pathlib
+# Sensitive detector
+import particle_simulation.detector
 
 class DetectorConstruction(G4VUserDetectorConstruction):
     def __init__(self, config: dict):
@@ -11,6 +13,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         self.config = config["constructor"]
         self.save_dir = config["save_dir"]
         self.logic_volume = None
+        self.sensitive_detector = None
 
         # Magnetic field 
         self.mag_field = self.parse_magnetic_field(self.config["mag_file"])
@@ -32,8 +35,11 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             self.export_gdml = self.config["custom"].get("export_gdml", False)
 
             # Define the density, temperature and materials
-            self.density, self.temp, self.height = self.parse_density_temp_from_config()
+            self.density, self.temp, _ = self.parse_density_temp_from_config()
             self.material, self.world_material = self.define_materials()
+
+            # Lower and upper limits of the layers
+            self.altitude_limits = np.zeros((self.density_points,2), dtype=float)
 
     def Construct(self):
         # TODO: Reading from GDML files is a pain in the back. If the GDML file is generated using this package we are ok,
@@ -73,14 +79,22 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         return world_volume
     
     def ConstructSDandField(self):
+        #TODO: Several sensitive detectors might be problematic if all of them have to write files. Too much i/o
         # Add sensitive detectors and magnetic fields if any
         if self.mag_field is not None:
             for i in range(self.density_points):
                 mag_x, mag_y, mag_z = self.mag_field[i]
                 magField = G4UniformMagField(G4ThreeVector(mag_x*tesla, mag_y*tesla, mag_z*tesla))
                 locField = G4FieldManager(magField)
+                locField.CreateChordFinder(magField)
+                locField.SetDetectorField(magField)
                 # Add the magnetic field to the logic volume
                 self.logic_volume[i].SetFieldManager(locField, True)
+
+        if self.sensitive_detector is not None:
+            for i in range(len(self.sensitive_detector)):
+                sensitive_det = particle_simulation.detector.SensDetector(self.config, "sensitive_detector_" + str(i))
+                self.sensitive_detector[i].SetSensitiveDetector(sensitive_det)
 
     def parse_magnetic_field(self, mag_file: str):
         # Parse the magnetic field from a file
@@ -111,6 +125,10 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             logicAtmos[i] = G4LogicalVolume(solidAtmos[i], 
                                             self.material[i], 
                                             "logicAtmos_" + str(i))
+            # Add the values of the altitude limits
+            self.altitude_limits[i] = [i * self.atmosphere_height / self.density_points - self.atmosphere_height / 2, 
+                                        i * self.atmosphere_height / self.density_points + 2*box_height - self.atmosphere_height / 2]
+
             G4PVPlacement(None, 
                           G4ThreeVector(0, 0, i * self.atmosphere_height / self.density_points + box_height - self.atmosphere_height / 2), 
                           logicAtmos[i], 
@@ -119,7 +137,55 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                           False, 
                           i, 
                           True)
-            
+
+        # Construct the sensitive detectors if any
+        if self.config.get("sensitive_detectors", False):
+            detectors_alt = np.array(self.config["sensitive_detectors"]["altitude"]) * km - self.atmosphere_height / 2
+            n_detectors = len(detectors_alt)
+
+            # First we need to identify in which layer the detectors are
+            detectors_layer = np.zeros(n_detectors, dtype=int)
+            for i in range(n_detectors):
+                for j in range(self.density_points):
+                    if detectors_alt[i] >= self.altitude_limits[j][0] and detectors_alt[i] <= self.altitude_limits[j][1]:
+                        detectors_layer[i] = j
+                        break
+
+            # Now we can create the sensitive detectors
+            logicDetector = np.zeros(n_detectors, dtype=object)
+            solidDetector = np.zeros(n_detectors, dtype=object)
+            detector_size = self.atmosphere_height / self.density_points / 10 # 1/10 of the layer height
+            for i in range(n_detectors):
+                solidDetector[i] = G4Box("solidDetector_" + str(i), self.size / 2, self.size / 2, detector_size / 2)
+                logicDetector[i] = G4LogicalVolume(solidDetector[i], self.material[i], "logicDetector_" + str(i))
+                # The sensitive detector will be a daughter of the layer where it is located
+                # Therefore, the placement is relative to the layer and we need to ensure that the detector fits in the layer
+
+                # Layer limits in local coordinates
+                upper_lim = box_height
+                layer_center = self.altitude_limits[detectors_layer[i]][0] + box_height
+                lower_lim = -box_height 
+
+                # The altitude of the detector is the altitude of the layer plus the distance to the limit
+                detector_position = detectors_alt[i] - layer_center
+                # Check if the detector fits in the layer
+                if detector_position + detector_size / 2 > upper_lim:
+                    detector_position = (upper_lim - detector_size / 2 )
+                elif detector_position - detector_size / 2 < lower_lim:
+                    detector_position += detector_size / 2
+
+                G4PVPlacement(None, 
+                              G4ThreeVector(0, 0, detector_position), 
+                              logicDetector[i], 
+                              "physDetector_" + str(i), 
+                              logicAtmos[detectors_layer[i]], 
+                              False, 
+                              i, 
+                              True)
+
+            # Add the sensitive detectors to the attribute
+            self.sensitive_detector = logicDetector
+
         return physWorld, logicAtmos
     
     def construct_spherical_world(self):
@@ -145,6 +211,10 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             logicAtmos[i] = G4LogicalVolume(solidAtmos[i], 
                                             self.material[i], 
                                             "logicAtmos_" + str(i))
+            # Add the values of the altitude limits
+            self.altitude_limits[i] = [earth_rad + i * self.atmosphere_height / self.density_points, 
+                                        earth_rad + (i + 1) * self.atmosphere_height / self.density_points]
+
             G4PVPlacement(None, 
                           G4ThreeVector(0, 0, 0), 
                           logicAtmos[i], 
@@ -190,7 +260,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             file_path = self.config["custom"]["atmos_from_file"]
             df = pd.read_csv(file_path)
             # Get the height, temperature and density
-            height = np.array(df["Height/km"])
+            height = np.array(df["Height/km"]) * km
             temp = np.array(df["T/K"])
             density = np.array(df["rho/(kg/m3)"])
 

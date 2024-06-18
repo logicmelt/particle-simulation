@@ -28,7 +28,6 @@ class ParticleGunGenerator(G4VUserPrimaryGeneratorAction):
 
         self.particle_gun.SetParticleMomentumDirection(G4ThreeVector(px, py, pz))
         self.particle_gun.SetParticlePosition(G4ThreeVector(x*km, y*km, z*km))
-
         # Energy of the particle
         self.particle_gun.SetParticleEnergy(self.config["parameters"]["energy"] * GeV)
 
