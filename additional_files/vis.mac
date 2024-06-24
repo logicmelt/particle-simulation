@@ -12,8 +12,10 @@
 /vis/scene/add/axes
 # By using this command the visualized events per run will accumulate instead of being removed
 /vis/scene/endOfEventAction accumulate
+# Draw the magnetic field
+/vis/scene/add/magneticField
 
-/run/beamOn 1000
+/run/beamOn 1
 
 /vis/viewer/refresh
 

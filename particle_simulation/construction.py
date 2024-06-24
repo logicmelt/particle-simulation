@@ -1,11 +1,43 @@
-from geant4_pybind import G4VUserDetectorConstruction, G4NistManager, G4State, G4Material, G4GDMLParser, G4VUserDetectorConstruction, G4Box, G4Sphere, G4LogicalVolume, G4PVPlacement, G4ThreeVector, G4UniformMagField, G4FieldManager
+from geant4_pybind import G4VUserDetectorConstruction, G4NistManager, G4State, G4Material, G4GDMLParser, G4VUserDetectorConstruction 
+from geant4_pybind import G4Box, G4Sphere, G4LogicalVolume, G4PVPlacement, G4ThreeVector, G4MagneticField, G4FieldManager, G4SDManager, G4GenericMessenger
 # Import units
-from geant4_pybind import kelvin, kg, m3, perCent, radian, km, tesla
+from geant4_pybind import kelvin, kg, m3, perCent, radian, km, tesla 
 import pandas as pd
 import numpy as np
 import pathlib
 # Sensitive detector
 import particle_simulation.detector
+# Logger
+import logging
+
+#TODO: Are the sensitive sensors too big? Worried that some particles might be created inside the sensitive detector and trigger
+#TODO: Need to correct the altitude of the magnetic field given that with boxes we start at -height/2 and with spheres at earths_radius
+
+class UniformMagneticField(G4MagneticField):
+    def __init__(self, x: float, y: float, z: float):
+        super().__init__()
+        self.fbx = x * tesla
+        self.fby = y * tesla
+        self.fbz = z * tesla
+
+        # define commands for this class
+        # Define /B5/field command directory using generic messenger class
+        self.fMessenger = G4GenericMessenger(self, "/B5/field/", "Field control")
+
+        # # fieldValue command
+        valueCmd = self.fMessenger.DeclareMethodWithUnit("value", "tesla", self.SetFieldy,
+                                                         "Set field strength.")
+        # valueCmd.SetParameterName("field", True)
+
+    def GetFieldValue(self, point, Bfield):
+        Bfield[0] = self.fbx
+        Bfield[1] = self.fby
+        Bfield[2] = self.fbz
+        # Alternatively you can return the field as an array
+        # return [0, self.fBy, 0]
+
+    def SetFieldy(self, val: float):
+        self.fby = val
 
 class DetectorConstruction(G4VUserDetectorConstruction):
     def __init__(self, config: dict):
@@ -15,6 +47,9 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         self.logic_volume = None
         self.sensitive_detector = None
 
+        # Logger
+        self.logger = logging.getLogger("main")
+        self.logger.info("Creating the detector construction")
         # Magnetic field 
         self.mag_field = self.parse_magnetic_field(self.config["mag_file"])
 
@@ -81,29 +116,45 @@ class DetectorConstruction(G4VUserDetectorConstruction):
     def ConstructSDandField(self):
         #TODO: Several sensitive detectors might be problematic if all of them have to write files. Too much i/o
         # Add sensitive detectors and magnetic fields if any
+        self.logger.info(self.logic_volume)
         if self.mag_field is not None:
+            self.logger.info("Adding the magnetic field")
+            # Add the magnetic field to the layers
             for i in range(self.density_points):
-                mag_x, mag_y, mag_z = self.mag_field[i]
-                magField = G4UniformMagField(G4ThreeVector(mag_x*tesla, mag_y*tesla, mag_z*tesla))
-                locField = G4FieldManager(magField)
+                # Get the altitude of the layer
+                altitude = (self.altitude_limits[i][0] + self.altitude_limits[i][1]) / 2
+                # Search for the magnetic field at that altitude
+                chosen_mag = self.mag_field[np.argmin(np.abs(self.mag_field[:,3] / 2 - altitude))]
+                self.logger.debug(f"Adding the magnetic field at altitude {altitude} km with values {chosen_mag} at layer {i}")
+                # Create the magnetic field
+                magField = UniformMagneticField(chosen_mag[0], chosen_mag[1], chosen_mag[2])
+                locField = G4FieldManager()
                 locField.CreateChordFinder(magField)
                 locField.SetDetectorField(magField)
                 # Add the magnetic field to the logic volume
                 self.logic_volume[i].SetFieldManager(locField, True)
 
         if self.sensitive_detector is not None:
+            sdManager = G4SDManager.GetSDMpointer()
             for i in range(len(self.sensitive_detector)):
                 sensitive_det = particle_simulation.detector.SensDetector(self.config, "sensitive_detector_" + str(i))
+                sdManager.AddNewDetector(sensitive_det)
                 self.sensitive_detector[i].SetSensitiveDetector(sensitive_det)
 
     def parse_magnetic_field(self, mag_file: str):
         # Parse the magnetic field from a file
         if mag_file == "none":
+            self.logger.info("No magnetic field file provided")
             return None
         else:
+            self.logger.info(f"Reading the magnetic field from {mag_file}")
             open_csv = pd.read_csv(mag_file)
-            # Return the magnetic field as a numpy array in Tesla
-            return np.array(open_csv[["x", "y", "z"]] * 1e-9)
+            # Transforms the values from nT to Tesla
+            open_csv[["x", "y", "z"]] = open_csv[["x", "y", "z"]] * 1e-9
+            # And the km column using the geant4 System of units
+            open_csv["altitude"] = open_csv["altitude"] * km
+            # Print back the magnetic field and the altitude
+            return np.array(open_csv[["x", "y", "z", "altitude"]])
 
     def construct_flat_world(self):
         # Construct a flat world volume including all the layers of the atmosphere
@@ -139,7 +190,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                           True)
 
         # Construct the sensitive detectors if any
-        if self.config.get("sensitive_detectors", False):
+        if self.config["sensitive_detectors"].get("enabled", False):
             detectors_alt = np.array(self.config["sensitive_detectors"]["altitude"]) * km - self.atmosphere_height / 2
             n_detectors = len(detectors_alt)
 
@@ -157,7 +208,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             detector_size = self.atmosphere_height / self.density_points / 10 # 1/10 of the layer height
             for i in range(n_detectors):
                 solidDetector[i] = G4Box("solidDetector_" + str(i), self.size / 2, self.size / 2, detector_size / 2)
-                logicDetector[i] = G4LogicalVolume(solidDetector[i], self.material[i], "logicDetector_" + str(i))
+                logicDetector[i] = G4LogicalVolume(solidDetector[i], self.material[detectors_layer[i]], "logicDetector_" + str(i))
                 # The sensitive detector will be a daughter of the layer where it is located
                 # Therefore, the placement is relative to the layer and we need to ensure that the detector fits in the layer
 
@@ -272,6 +323,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             return density, temp, inter_height
         
         else:
+            self.logger.error("Only 'from_file' is supported for 'atmos_density' in the config file.")
             raise NotImplementedError("Only 'from_file' is supported for 'atmos_density' in the config file.")
 
 

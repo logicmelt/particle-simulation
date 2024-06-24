@@ -4,257 +4,257 @@
   <define/>
 
   <materials>
-    <isotope N="14" Z="7" name="N140x60a45f6d3690">
+    <isotope N="14" Z="7" name="N140x5e323caa6680">
       <atom unit="g/mole" value="14.0031"/>
     </isotope>
-    <isotope N="15" Z="7" name="N150x60a45f6d3720">
+    <isotope N="15" Z="7" name="N150x5e323caa6710">
       <atom unit="g/mole" value="15.0001"/>
     </isotope>
-    <element name="N0x60a45f6cd560">
-      <fraction n="0.99632" ref="N140x60a45f6d3690"/>
-      <fraction n="0.00368" ref="N150x60a45f6d3720"/>
+    <element name="N0x5e323ca996a0">
+      <fraction n="0.99632" ref="N140x5e323caa6680"/>
+      <fraction n="0.00368" ref="N150x5e323caa6710"/>
     </element>
-    <isotope N="16" Z="8" name="O160x60a45f6d38d0">
+    <isotope N="16" Z="8" name="O160x5e323caa68c0">
       <atom unit="g/mole" value="15.9949"/>
     </isotope>
-    <isotope N="17" Z="8" name="O170x60a45f6d3900">
+    <isotope N="17" Z="8" name="O170x5e323caa68f0">
       <atom unit="g/mole" value="16.9991"/>
     </isotope>
-    <isotope N="18" Z="8" name="O180x60a45f6d3980">
+    <isotope N="18" Z="8" name="O180x5e323caa6970">
       <atom unit="g/mole" value="17.9992"/>
     </isotope>
-    <element name="O0x60a45f6ca900">
-      <fraction n="0.99757" ref="O160x60a45f6d38d0"/>
-      <fraction n="0.00038" ref="O170x60a45f6d3900"/>
-      <fraction n="0.00205" ref="O180x60a45f6d3980"/>
+    <element name="O0x5e323ca96a40">
+      <fraction n="0.99757" ref="O160x5e323caa68c0"/>
+      <fraction n="0.00038" ref="O170x5e323caa68f0"/>
+      <fraction n="0.00205" ref="O180x5e323caa6970"/>
     </element>
-    <isotope N="36" Z="18" name="Ar360x60a45f6d3b60">
+    <isotope N="36" Z="18" name="Ar360x5e323caa6b50">
       <atom unit="g/mole" value="35.9675"/>
     </isotope>
-    <isotope N="38" Z="18" name="Ar380x60a45f6d3bc0">
+    <isotope N="38" Z="18" name="Ar380x5e323caa6bb0">
       <atom unit="g/mole" value="37.9627"/>
     </isotope>
-    <isotope N="40" Z="18" name="Ar400x60a45f6d3c20">
+    <isotope N="40" Z="18" name="Ar400x5e323caa6c10">
       <atom unit="g/mole" value="39.9624"/>
     </isotope>
-    <element name="Ar0x60a45f6cdd00">
-      <fraction n="0.003365" ref="Ar360x60a45f6d3b60"/>
-      <fraction n="0.000632" ref="Ar380x60a45f6d3bc0"/>
-      <fraction n="0.996003" ref="Ar400x60a45f6d3c20"/>
+    <element name="Ar0x5e323ca99e40">
+      <fraction n="0.003365" ref="Ar360x5e323caa6b50"/>
+      <fraction n="0.000632" ref="Ar380x5e323caa6bb0"/>
+      <fraction n="0.996003" ref="Ar400x5e323caa6c10"/>
     </element>
-    <material name="G4_Air_00x60a45f674f90" state="gas">
+    <material name="G4_Air_00x5e323ca41d90" state="gas">
       <T unit="K" value="281.6"/>
       <MEE unit="eV" value="87.2773115291839"/>
       <D unit="g/cm3" value="0.0012311"/>
-      <fraction n="0.7" ref="N0x60a45f6cd560"/>
-      <fraction n="0.27" ref="O0x60a45f6ca900"/>
-      <fraction n="0.03" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.7" ref="N0x5e323ca996a0"/>
+      <fraction n="0.27" ref="O0x5e323ca96a40"/>
+      <fraction n="0.03" ref="Ar0x5e323ca99e40"/>
     </material>
-    <material name="G4_Air_10x60a45f6750a0" state="gas">
+    <material name="G4_Air_10x5e323ca41f30" state="gas">
       <T unit="K" value="239.494444444444"/>
       <MEE unit="eV" value="87.2773115291841"/>
       <D unit="g/cm3" value="0.000583961111111111"/>
-      <fraction n="0.7" ref="N0x60a45f6cd560"/>
-      <fraction n="0.27" ref="O0x60a45f6ca900"/>
-      <fraction n="0.03" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.7" ref="N0x5e323ca996a0"/>
+      <fraction n="0.27" ref="O0x5e323ca96a40"/>
+      <fraction n="0.03" ref="Ar0x5e323ca99e40"/>
     </material>
-    <material name="G4_Air_20x60a45e6d6990" state="gas">
+    <material name="G4_Air_20x5e323ca3e1f0" state="gas">
       <T unit="K" value="216.478260869565"/>
       <MEE unit="eV" value="87.2773115291839"/>
       <D unit="g/cm3" value="0.000269031884057971"/>
-      <fraction n="0.7" ref="N0x60a45f6cd560"/>
-      <fraction n="0.27" ref="O0x60a45f6ca900"/>
-      <fraction n="0.03" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.7" ref="N0x5e323ca996a0"/>
+      <fraction n="0.27" ref="O0x5e323ca96a40"/>
+      <fraction n="0.03" ref="Ar0x5e323ca99e40"/>
     </material>
-    <material name="G4_Air_30x60a45f678c00" state="gas">
+    <material name="G4_Air_30x5e323ca42150" state="gas">
       <T unit="K" value="224.086956521739"/>
       <MEE unit="eV" value="87.2773115291839"/>
       <D unit="g/cm3" value="0.000164539130434783"/>
-      <fraction n="0.7" ref="N0x60a45f6cd560"/>
-      <fraction n="0.27" ref="O0x60a45f6ca900"/>
-      <fraction n="0.03" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.7" ref="N0x5e323ca996a0"/>
+      <fraction n="0.27" ref="O0x5e323ca96a40"/>
+      <fraction n="0.03" ref="Ar0x5e323ca99e40"/>
     </material>
-    <material name="G4_Air_40x60a45e6dc840" state="gas">
+    <material name="G4_Air_40x5e323ca3e0e0" state="gas">
       <T unit="K" value="231.695652173913"/>
       <MEE unit="eV" value="87.2773115291839"/>
       <D unit="g/cm3" value="6.00463768115942e-05"/>
-      <fraction n="0.7" ref="N0x60a45f6cd560"/>
-      <fraction n="0.27" ref="O0x60a45f6ca900"/>
-      <fraction n="0.03" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.7" ref="N0x5e323ca996a0"/>
+      <fraction n="0.27" ref="O0x5e323ca96a40"/>
+      <fraction n="0.03" ref="Ar0x5e323ca99e40"/>
     </material>
-    <material name="G4_Air_50x60a45f6fbaf0" state="gas">
+    <material name="G4_Air_50x5e323cac7fb0" state="gas">
       <T unit="K" value="240.425925925926"/>
       <MEE unit="eV" value="87.2773115291839"/>
       <D unit="g/cm3" value="6.01111111111111e-06"/>
-      <fraction n="0.7" ref="N0x60a45f6cd560"/>
-      <fraction n="0.27" ref="O0x60a45f6ca900"/>
-      <fraction n="0.03" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.7" ref="N0x5e323ca996a0"/>
+      <fraction n="0.27" ref="O0x5e323ca96a40"/>
+      <fraction n="0.03" ref="Ar0x5e323ca99e40"/>
     </material>
-    <material name="G4_Air_60x60a45f6fbc70" state="gas">
+    <material name="G4_Air_60x5e323cac8130" state="gas">
       <T unit="K" value="250.277777777778"/>
       <MEE unit="eV" value="87.2773115291839"/>
       <D unit="g/cm3" value="2.43333333333333e-06"/>
-      <fraction n="0.7" ref="N0x60a45f6cd560"/>
-      <fraction n="0.27" ref="O0x60a45f6ca900"/>
-      <fraction n="0.03" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.7" ref="N0x5e323ca996a0"/>
+      <fraction n="0.27" ref="O0x5e323ca96a40"/>
+      <fraction n="0.03" ref="Ar0x5e323ca99e40"/>
     </material>
-    <material name="G4_Air_70x60a45f6fbdf0" state="gas">
+    <material name="G4_Air_70x5e323cac82b0" state="gas">
       <T unit="K" value="254.5"/>
       <MEE unit="eV" value="87.2773115291839"/>
       <D unit="g/cm3" value="9e-07"/>
-      <fraction n="0.7" ref="N0x60a45f6cd560"/>
-      <fraction n="0.27" ref="O0x60a45f6ca900"/>
-      <fraction n="0.03" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.7" ref="N0x5e323ca996a0"/>
+      <fraction n="0.27" ref="O0x5e323ca96a40"/>
+      <fraction n="0.03" ref="Ar0x5e323ca99e40"/>
     </material>
-    <material name="G4_Air_80x60a45f6fbf70" state="gas">
+    <material name="G4_Air_80x5e323cac8430" state="gas">
       <T unit="K" value="254.5"/>
       <MEE unit="eV" value="87.2773115291839"/>
       <D unit="g/cm3" value="9e-07"/>
-      <fraction n="0.7" ref="N0x60a45f6cd560"/>
-      <fraction n="0.27" ref="O0x60a45f6ca900"/>
-      <fraction n="0.03" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.7" ref="N0x5e323ca996a0"/>
+      <fraction n="0.27" ref="O0x5e323ca96a40"/>
+      <fraction n="0.03" ref="Ar0x5e323ca99e40"/>
     </material>
-    <material name="G4_Air_90x60a45f6fc0f0" state="gas">
+    <material name="G4_Air_90x5e323cac85b0" state="gas">
       <T unit="K" value="254.5"/>
       <MEE unit="eV" value="87.2773115291839"/>
       <D unit="g/cm3" value="9e-07"/>
-      <fraction n="0.7" ref="N0x60a45f6cd560"/>
-      <fraction n="0.27" ref="O0x60a45f6ca900"/>
-      <fraction n="0.03" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.7" ref="N0x5e323ca996a0"/>
+      <fraction n="0.27" ref="O0x5e323ca96a40"/>
+      <fraction n="0.03" ref="Ar0x5e323ca99e40"/>
     </material>
-    <isotope N="12" Z="6" name="C120x60a45f6d33d0">
+    <isotope N="12" Z="6" name="C120x5e323caa6440">
       <atom unit="g/mole" value="12"/>
     </isotope>
-    <isotope N="13" Z="6" name="C130x60a45f6d3470">
+    <isotope N="13" Z="6" name="C130x5e323caa64e0">
       <atom unit="g/mole" value="13.0034"/>
     </isotope>
-    <element name="C0x60a45f6cdb00">
-      <fraction n="0.9893" ref="C120x60a45f6d33d0"/>
-      <fraction n="0.0107" ref="C130x60a45f6d3470"/>
+    <element name="C0x5e323ca99c40">
+      <fraction n="0.9893" ref="C120x5e323caa6440"/>
+      <fraction n="0.0107" ref="C130x5e323caa64e0"/>
     </element>
-    <material name="G4_AIR0x60a45f678af0" state="gas">
+    <material name="G4_AIR0x5e323ca42040" state="gas">
       <T unit="K" value="293.15"/>
       <MEE unit="eV" value="85.7"/>
       <D unit="g/cm3" value="0.00120479"/>
-      <fraction n="0.000124000124000124" ref="C0x60a45f6cdb00"/>
-      <fraction n="0.755267755267755" ref="N0x60a45f6cd560"/>
-      <fraction n="0.231781231781232" ref="O0x60a45f6ca900"/>
-      <fraction n="0.0128270128270128" ref="Ar0x60a45f6cdd00"/>
+      <fraction n="0.000124000124000124" ref="C0x5e323ca99c40"/>
+      <fraction n="0.755267755267755" ref="N0x5e323ca996a0"/>
+      <fraction n="0.231781231781232" ref="O0x5e323ca96a40"/>
+      <fraction n="0.0128270128270128" ref="Ar0x5e323ca99e40"/>
     </material>
   </materials>
 
   <solids>
-    <box lunit="mm" name="solidDetector_00x60a45f91c160" x="100000000" y="100000000" z="700000"/>
-    <box lunit="mm" name="solidAtmos_00x60a45f919870" x="100000000" y="100000000" z="7000000"/>
-    <box lunit="mm" name="solidAtmos_10x60a45f91f990" x="100000000" y="100000000" z="7000000"/>
-    <box lunit="mm" name="solidAtmos_20x60a45f919f80" x="100000000" y="100000000" z="7000000"/>
-    <box lunit="mm" name="solidAtmos_30x60a45f91a3f0" x="100000000" y="100000000" z="7000000"/>
-    <box lunit="mm" name="solidAtmos_40x60a45f91a810" x="100000000" y="100000000" z="7000000"/>
-    <box lunit="mm" name="solidAtmos_50x60a45f91ac70" x="100000000" y="100000000" z="7000000"/>
-    <box lunit="mm" name="solidAtmos_60x60a45f91b0b0" x="100000000" y="100000000" z="7000000"/>
-    <box lunit="mm" name="solidAtmos_70x60a45f91b4f0" x="100000000" y="100000000" z="7000000"/>
-    <box lunit="mm" name="solidAtmos_80x60a45f91b930" x="100000000" y="100000000" z="7000000"/>
-    <box lunit="mm" name="solidAtmos_90x60a45f91bd70" x="100000000" y="100000000" z="7000000"/>
-    <box lunit="mm" name="solidWorld0x60a45f90f290" x="100000000" y="100000000" z="70000000"/>
+    <box lunit="mm" name="solidDetector_00x5e323cce9a10" x="100000000" y="100000000" z="700000"/>
+    <box lunit="mm" name="solidAtmos_00x5e323cce7120" x="100000000" y="100000000" z="7000000"/>
+    <box lunit="mm" name="solidAtmos_10x5e323cced240" x="100000000" y="100000000" z="7000000"/>
+    <box lunit="mm" name="solidAtmos_20x5e323cce7830" x="100000000" y="100000000" z="7000000"/>
+    <box lunit="mm" name="solidAtmos_30x5e323cce7ca0" x="100000000" y="100000000" z="7000000"/>
+    <box lunit="mm" name="solidAtmos_40x5e323cce80c0" x="100000000" y="100000000" z="7000000"/>
+    <box lunit="mm" name="solidAtmos_50x5e323cce8520" x="100000000" y="100000000" z="7000000"/>
+    <box lunit="mm" name="solidAtmos_60x5e323cce8960" x="100000000" y="100000000" z="7000000"/>
+    <box lunit="mm" name="solidAtmos_70x5e323cce8da0" x="100000000" y="100000000" z="7000000"/>
+    <box lunit="mm" name="solidAtmos_80x5e323cce91e0" x="100000000" y="100000000" z="7000000"/>
+    <box lunit="mm" name="solidAtmos_90x5e323cce9620" x="100000000" y="100000000" z="7000000"/>
+    <box lunit="mm" name="solidWorld0x5e323ccdc810" x="100000000" y="100000000" z="70000000"/>
   </solids>
 
   <structure>
-    <volume name="logicDetector_00x60a45f91c1f0">
-      <materialref ref="G4_Air_00x60a45f674f90"/>
-      <solidref ref="solidDetector_00x60a45f91c160"/>
+    <volume name="logicDetector_00x5e323cce9aa0">
+      <materialref ref="G4_Air_00x5e323ca41d90"/>
+      <solidref ref="solidDetector_00x5e323cce9a10"/>
     </volume>
-    <volume name="logicAtmos_00x60a45f8cb940">
-      <materialref ref="G4_Air_00x60a45f674f90"/>
-      <solidref ref="solidAtmos_00x60a45f919870"/>
-      <physvol name="physDetector_00x60a45f91c480">
-        <volumeref ref="logicDetector_00x60a45f91c1f0"/>
-        <position name="physDetector_00x60a45f91c480_pos" unit="mm" x="0" y="0" z="-3150000"/>
+    <volume name="logicAtmos_00x5e323cc98880">
+      <materialref ref="G4_Air_00x5e323ca41d90"/>
+      <solidref ref="solidAtmos_00x5e323cce7120"/>
+      <physvol name="physDetector_00x5e323cce9d30">
+        <volumeref ref="logicDetector_00x5e323cce9aa0"/>
+        <position name="physDetector_00x5e323cce9d30_pos" unit="mm" x="0" y="0" z="-3150000"/>
       </physvol>
     </volume>
-    <volume name="logicAtmos_10x60a45f919bf0">
-      <materialref ref="G4_Air_10x60a45f6750a0"/>
-      <solidref ref="solidAtmos_10x60a45f91f990"/>
+    <volume name="logicAtmos_10x5e323cce74a0">
+      <materialref ref="G4_Air_10x5e323ca41f30"/>
+      <solidref ref="solidAtmos_10x5e323cced240"/>
     </volume>
-    <volume name="logicAtmos_20x60a45f91a010">
-      <materialref ref="G4_Air_20x60a45e6d6990"/>
-      <solidref ref="solidAtmos_20x60a45f919f80"/>
+    <volume name="logicAtmos_20x5e323cce78c0">
+      <materialref ref="G4_Air_20x5e323ca3e1f0"/>
+      <solidref ref="solidAtmos_20x5e323cce7830"/>
     </volume>
-    <volume name="logicAtmos_30x60a45f91a480">
-      <materialref ref="G4_Air_30x60a45f678c00"/>
-      <solidref ref="solidAtmos_30x60a45f91a3f0"/>
+    <volume name="logicAtmos_30x5e323cce7d30">
+      <materialref ref="G4_Air_30x5e323ca42150"/>
+      <solidref ref="solidAtmos_30x5e323cce7ca0"/>
     </volume>
-    <volume name="logicAtmos_40x60a45f91a8a0">
-      <materialref ref="G4_Air_40x60a45e6dc840"/>
-      <solidref ref="solidAtmos_40x60a45f91a810"/>
+    <volume name="logicAtmos_40x5e323cce8150">
+      <materialref ref="G4_Air_40x5e323ca3e0e0"/>
+      <solidref ref="solidAtmos_40x5e323cce80c0"/>
     </volume>
-    <volume name="logicAtmos_50x60a45f91ad00">
-      <materialref ref="G4_Air_50x60a45f6fbaf0"/>
-      <solidref ref="solidAtmos_50x60a45f91ac70"/>
+    <volume name="logicAtmos_50x5e323cce85b0">
+      <materialref ref="G4_Air_50x5e323cac7fb0"/>
+      <solidref ref="solidAtmos_50x5e323cce8520"/>
     </volume>
-    <volume name="logicAtmos_60x60a45f91b140">
-      <materialref ref="G4_Air_60x60a45f6fbc70"/>
-      <solidref ref="solidAtmos_60x60a45f91b0b0"/>
+    <volume name="logicAtmos_60x5e323cce89f0">
+      <materialref ref="G4_Air_60x5e323cac8130"/>
+      <solidref ref="solidAtmos_60x5e323cce8960"/>
     </volume>
-    <volume name="logicAtmos_70x60a45f91b580">
-      <materialref ref="G4_Air_70x60a45f6fbdf0"/>
-      <solidref ref="solidAtmos_70x60a45f91b4f0"/>
+    <volume name="logicAtmos_70x5e323cce8e30">
+      <materialref ref="G4_Air_70x5e323cac82b0"/>
+      <solidref ref="solidAtmos_70x5e323cce8da0"/>
     </volume>
-    <volume name="logicAtmos_80x60a45f91b9c0">
-      <materialref ref="G4_Air_80x60a45f6fbf70"/>
-      <solidref ref="solidAtmos_80x60a45f91b930"/>
+    <volume name="logicAtmos_80x5e323cce9270">
+      <materialref ref="G4_Air_80x5e323cac8430"/>
+      <solidref ref="solidAtmos_80x5e323cce91e0"/>
     </volume>
-    <volume name="logicAtmos_90x60a45f91be00">
-      <materialref ref="G4_Air_90x60a45f6fc0f0"/>
-      <solidref ref="solidAtmos_90x60a45f91bd70"/>
+    <volume name="logicAtmos_90x5e323cce96b0">
+      <materialref ref="G4_Air_90x5e323cac85b0"/>
+      <solidref ref="solidAtmos_90x5e323cce9620"/>
     </volume>
-    <volume name="logicWorld0x60a45f8cb880">
-      <materialref ref="G4_AIR0x60a45f678af0"/>
-      <solidref ref="solidWorld0x60a45f90f290"/>
-      <physvol name="physAtmos_00x60a45f919aa0">
-        <volumeref ref="logicAtmos_00x60a45f8cb940"/>
-        <position name="physAtmos_00x60a45f919aa0_pos" unit="mm" x="0" y="0" z="-31500000"/>
+    <volume name="logicWorld0x5e323cc987c0">
+      <materialref ref="G4_AIR0x5e323ca42040"/>
+      <solidref ref="solidWorld0x5e323ccdc810"/>
+      <physvol name="physAtmos_00x5e323cce7350">
+        <volumeref ref="logicAtmos_00x5e323cc98880"/>
+        <position name="physAtmos_00x5e323cce7350_pos" unit="mm" x="0" y="0" z="-31500000"/>
       </physvol>
-      <physvol copynumber="1" name="physAtmos_10x60a45f919e60">
-        <volumeref ref="logicAtmos_10x60a45f919bf0"/>
-        <position name="physAtmos_10x60a45f919e60_pos" unit="mm" x="0" y="0" z="-24500000"/>
+      <physvol copynumber="1" name="physAtmos_10x5e323cce7710">
+        <volumeref ref="logicAtmos_10x5e323cce74a0"/>
+        <position name="physAtmos_10x5e323cce7710_pos" unit="mm" x="0" y="0" z="-24500000"/>
       </physvol>
-      <physvol copynumber="2" name="physAtmos_20x60a45f91a2a0">
-        <volumeref ref="logicAtmos_20x60a45f91a010"/>
-        <position name="physAtmos_20x60a45f91a2a0_pos" unit="mm" x="0" y="0" z="-17500000"/>
+      <physvol copynumber="2" name="physAtmos_20x5e323cce7b50">
+        <volumeref ref="logicAtmos_20x5e323cce78c0"/>
+        <position name="physAtmos_20x5e323cce7b50_pos" unit="mm" x="0" y="0" z="-17500000"/>
       </physvol>
-      <physvol copynumber="3" name="physAtmos_30x60a45f91a6f0">
-        <volumeref ref="logicAtmos_30x60a45f91a480"/>
-        <position name="physAtmos_30x60a45f91a6f0_pos" unit="mm" x="0" y="0" z="-10500000"/>
+      <physvol copynumber="3" name="physAtmos_30x5e323cce7fa0">
+        <volumeref ref="logicAtmos_30x5e323cce7d30"/>
+        <position name="physAtmos_30x5e323cce7fa0_pos" unit="mm" x="0" y="0" z="-10500000"/>
       </physvol>
-      <physvol copynumber="4" name="physAtmos_40x60a45f91ab30">
-        <volumeref ref="logicAtmos_40x60a45f91a8a0"/>
-        <position name="physAtmos_40x60a45f91ab30_pos" unit="mm" x="0" y="0" z="-3500000"/>
+      <physvol copynumber="4" name="physAtmos_40x5e323cce83e0">
+        <volumeref ref="logicAtmos_40x5e323cce8150"/>
+        <position name="physAtmos_40x5e323cce83e0_pos" unit="mm" x="0" y="0" z="-3500000"/>
       </physvol>
-      <physvol copynumber="5" name="physAtmos_50x60a45f91af90">
-        <volumeref ref="logicAtmos_50x60a45f91ad00"/>
-        <position name="physAtmos_50x60a45f91af90_pos" unit="mm" x="0" y="0" z="3500000"/>
+      <physvol copynumber="5" name="physAtmos_50x5e323cce8840">
+        <volumeref ref="logicAtmos_50x5e323cce85b0"/>
+        <position name="physAtmos_50x5e323cce8840_pos" unit="mm" x="0" y="0" z="3500000"/>
       </physvol>
-      <physvol copynumber="6" name="physAtmos_60x60a45f91b3d0">
-        <volumeref ref="logicAtmos_60x60a45f91b140"/>
-        <position name="physAtmos_60x60a45f91b3d0_pos" unit="mm" x="0" y="0" z="10500000"/>
+      <physvol copynumber="6" name="physAtmos_60x5e323cce8c80">
+        <volumeref ref="logicAtmos_60x5e323cce89f0"/>
+        <position name="physAtmos_60x5e323cce8c80_pos" unit="mm" x="0" y="0" z="10500000"/>
       </physvol>
-      <physvol copynumber="7" name="physAtmos_70x60a45f91b810">
-        <volumeref ref="logicAtmos_70x60a45f91b580"/>
-        <position name="physAtmos_70x60a45f91b810_pos" unit="mm" x="0" y="0" z="17500000"/>
+      <physvol copynumber="7" name="physAtmos_70x5e323cce90c0">
+        <volumeref ref="logicAtmos_70x5e323cce8e30"/>
+        <position name="physAtmos_70x5e323cce90c0_pos" unit="mm" x="0" y="0" z="17500000"/>
       </physvol>
-      <physvol copynumber="8" name="physAtmos_80x60a45f91bc50">
-        <volumeref ref="logicAtmos_80x60a45f91b9c0"/>
-        <position name="physAtmos_80x60a45f91bc50_pos" unit="mm" x="0" y="0" z="24500000"/>
+      <physvol copynumber="8" name="physAtmos_80x5e323cce9500">
+        <volumeref ref="logicAtmos_80x5e323cce9270"/>
+        <position name="physAtmos_80x5e323cce9500_pos" unit="mm" x="0" y="0" z="24500000"/>
       </physvol>
-      <physvol copynumber="9" name="physAtmos_90x60a45f91c040">
-        <volumeref ref="logicAtmos_90x60a45f91be00"/>
-        <position name="physAtmos_90x60a45f91c040_pos" unit="mm" x="0" y="0" z="31500000"/>
+      <physvol copynumber="9" name="physAtmos_90x5e323cce98f0">
+        <volumeref ref="logicAtmos_90x5e323cce96b0"/>
+        <position name="physAtmos_90x5e323cce98f0_pos" unit="mm" x="0" y="0" z="31500000"/>
       </physvol>
     </volume>
   </structure>
 
   <setup name="Default" version="1.0">
-    <world ref="logicWorld0x60a45f8cb880"/>
+    <world ref="logicWorld0x5e323cc987c0"/>
   </setup>
 
 </gdml>

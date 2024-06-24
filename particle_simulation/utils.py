@@ -2,6 +2,30 @@ import requests
 import json
 import pandas as pd
 import itertools
+import logging
+
+def create_logger(name: str, log_file: str, level: int = logging.INFO) -> logging.Logger:
+    """
+    Create a logger with the given name and log file.
+
+    Args:
+        name (str): The name of the logger.
+        log_file (str): The name of the log file.
+        level (int): The logging level.
+
+    Returns:
+        logging.Logger: The logger instance.
+    """
+    # Create the logger and set it to the desired level
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    # Output file and log format
+    FORMAT = logging.Formatter('%(asctime)s - %(filename)s->%(funcName)s():%(lineno)s - [%(levelname)s] - %(message)s')
+    file_handler = logging.FileHandler(log_file, mode="w", encoding=None, delay=False)
+    file_handler.setFormatter(FORMAT)
+    logger.addHandler(file_handler)
+    # Return the logger
+    return logger
 
 def get_mag_field(lat: float, lon: float, alt: float, date: str) -> tuple:
     """
@@ -48,7 +72,7 @@ def create_mag_file(lat: list[float], lon: list[float], alt: list[float], date: 
     Returns:
         None
     """
-    data = {"x": [], "y": [], "z": []}
+    data = {"x": [], "y": [], "z": [], "altitude": [], "latitude": [], "longitude": [], "date": []}
     # We need to iterate over the lists of lat, lon and alt
     combinations = itertools.product(lat, lon, alt, date)
     for comb in combinations:
@@ -56,6 +80,10 @@ def create_mag_file(lat: list[float], lon: list[float], alt: list[float], date: 
         data["x"].append(x)
         data["y"].append(y)
         data["z"].append(z)
+        data["latitude"].append(comb[0])
+        data["longitude"].append(comb[1])
+        data["altitude"].append(comb[2])
+        data["date"].append(comb[3])
     # Create a DataFrame and save it to a CSV file
     df = pd.DataFrame(data)
     df.to_csv(filename, index=False)
