@@ -2,21 +2,17 @@ from geant4_pybind import G4UImanager, G4UIExecutive, G4RunManagerFactory, G4Run
 from particle_simulation.construction import DetectorConstruction
 from particle_simulation.action import ActionInitialization
 from particle_simulation.physics import MyPhysicsList
-from particle_simulation.utils import create_logger
-import logging
-import yaml
+from particle_simulation.utils import create_logger, load_config
+import argparse
 
-def load_config(config_file: str):
-    with open(config_file, 'r') as f:
-        config = yaml.safe_load(f)
-    return config
-
-def main():
+def main(config_file: str):
     # Load the configuration file
-    config = load_config("additional_files/simulation_config.yaml")
+    config = load_config(config_file)
 
     # Create a logger
-    logger = create_logger("main", config["save_dir"]+"running.log", logging.INFO)
+    logger = create_logger("main", 
+                           config["save_dir"]+"running.log", 
+                           config.get("logger_level", "INFO"))
 
     # Macro files
     macro_files = config["macro_files"]
@@ -56,4 +52,9 @@ def main():
     logger.info("Finished running the macro files")
 
 if __name__ == "__main__":
-    main()
+    # Get the configuration file from the command line
+    parser = argparse.ArgumentParser(description="Particle simulation of a cosmic shower using Geant4 and Python.")
+    parser.add_argument("config_file", type=str, help="Configuration yaml file")
+    args = parser.parse_args()
+    # Run the main function
+    main(args.config_file)

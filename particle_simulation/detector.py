@@ -1,4 +1,5 @@
 from geant4_pybind import G4VSensitiveDetector, G4Step, G4TouchableHistory, G4AnalysisManager, G4RunManager
+import logging
 
 class SensDetector(G4VSensitiveDetector):
     def __init__(self, config: dict, name: str):
@@ -7,6 +8,7 @@ class SensDetector(G4VSensitiveDetector):
         self.accepted_particles = self.config["sensitive_detectors"]["particles"]
         self.accepted_particles.append("all")
         self.track_list = set()
+        self.logger = logging.getLogger("main")
 
     def ProcessHits(self, step: G4Step, history: G4TouchableHistory):
         # Get the analysis manager (Singleton)

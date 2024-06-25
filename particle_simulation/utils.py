@@ -3,19 +3,43 @@ import json
 import pandas as pd
 import itertools
 import logging
+import yaml
 
-def create_logger(name: str, log_file: str, level: int = logging.INFO) -> logging.Logger:
+LOGGER_LEVEL = {
+    "DEBUG": logging.DEBUG,
+    "INFO": logging.INFO,
+    "WARNING": logging.WARNING,
+    "ERROR": logging.ERROR,
+    "CRITICAL": logging.CRITICAL
+}
+
+def load_config(config_file: str)-> dict:
+    """Loads a configuration file in YAML format.
+    
+    Args:
+        config_file (str): The path to the configuration file.
+        
+    Returns:
+        dict: The configuration file read as a dictionary.
+    """
+    with open(config_file, 'r') as f:
+        config = yaml.safe_load(f)
+    return config
+
+def create_logger(name: str, log_file: str, level: str = "INFO") -> logging.Logger:
     """
     Create a logger with the given name and log file.
 
     Args:
         name (str): The name of the logger.
         log_file (str): The name of the log file.
-        level (int): The logging level.
+        level (str): The logging level.
 
     Returns:
         logging.Logger: The logger instance.
     """
+    # Get the logging level
+    level = LOGGER_LEVEL.get(level)
     # Create the logger and set it to the desired level
     logger = logging.getLogger(name)
     logger.setLevel(level)
