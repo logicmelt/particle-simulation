@@ -1,7 +1,6 @@
-from geant4_pybind import G4UImanager, G4UIExecutive, G4RunManagerFactory, G4RunManagerType, G4VisExecutive, QGSP_BERT_HP
+from geant4_pybind import G4UImanager, G4RunManagerFactory, G4RunManagerType, G4VisExecutive, QGSP_BERT_HP
 from particle_simulation.construction import DetectorConstruction
 from particle_simulation.action import ActionInitialization
-from particle_simulation.physics import MyPhysicsList
 from particle_simulation.utils import create_logger, load_config
 import argparse
 
@@ -34,7 +33,6 @@ def main(config_file: str):
     # Initialize the run manager
     runManager.Initialize()
 
-    ui = G4UIExecutive(1, ['vis.mac'])
     visManager = G4VisExecutive()
     visManager.Initialize()
     # Create an instance of the UI manager
