@@ -24,7 +24,7 @@ class UniformMagneticField(G4MagneticField):
         # Define /B5/field command directory using generic messenger class
         self.fMessenger = G4GenericMessenger(self, "/B5/field/", "Field control")
 
-        # # fieldValue command
+        # fieldValue command
         valueCmd = self.fMessenger.DeclareMethodWithUnit("value", "tesla", self.SetFieldy,
                                                          "Set field strength.")
         # valueCmd.SetParameterName("field", True)
@@ -110,6 +110,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             if outputPath.exists():
                 outputPath.unlink()
             self.gdml_parser.Write(str(outputPath), world_volume)
+            self.logger.info(f"Exported the geometry to {outputPath}/geometry.gdml")
             # We want to export it once, not every time the Construct method is called
             self.export_gdml = False
 
@@ -317,15 +318,24 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                 self.logger.debug(f"Creating sensitive detector at altitude {detectors_alt[i]} in layer {detectors_layer[i]}.")
                 self.logger.debug(f"Detector size is {detector_size}.")
                 
+                # Get the upper and lower layer limits
+                upper_lim = self.altitude_limits[detectors_layer[i]][1]
+
+                # The altitude of the detector is the altitude of the layer plus the detector size if it fits
+                if detectors_alt[i] + detector_size <= upper_lim:
+                    chosen_alt = detectors_alt[i]
+                else:
+                    chosen_alt = upper_lim - detector_size
+
                 solidDetector[i] = G4Sphere("solidDetector_" + str(i), 
-                                    self.correction_factor + i * self.atmosphere_height / self.density_points, 
-                                    self.correction_factor + i * self.atmosphere_height / self.density_points + detector_size, 
+                                    chosen_alt, 
+                                    chosen_alt + detector_size, 
                                     0, 2*np.pi*radian, 0, angle_sph)
                 logicDetector[i] = G4LogicalVolume(solidDetector[i], self.material[detectors_layer[i]], "logicDetector_" + str(i))
                 # The sensitive detector will be a daughter of the layer where it is located
                 # Therefore, the placement is relative to the layer and we need to ensure that the detector fits in the layer
 
-                # Position of the detector in local coordinates is easy, it's an sphere centecer at (0,0,0)
+                # Position of the detector in local coordinates is easy, it's an sphere centered at (0,0,0)
                 G4PVPlacement(None, 
                               G4ThreeVector(0, 0, 0), 
                               logicDetector[i], 

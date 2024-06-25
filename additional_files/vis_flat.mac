@@ -6,7 +6,7 @@
 /vis/viewer/set/viewpointVector 1 1 1
 # Plot the trajectories
 /vis/scene/add/trajectories smooth
-# Plot a 1km scale
+# Plot a 10km scale
 /vis/scene/add/scale 10 km
 # Plot axes
 /vis/scene/add/axes

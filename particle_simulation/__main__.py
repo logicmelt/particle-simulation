@@ -24,7 +24,7 @@ def main(config_file: str):
     runManager.SetUserInitialization(DetectorConstruction(config))
     # Physics list
     logger.info("Loading the physics list")
-    #runManager.SetUserInitialization(MyPhysicsList())
+    # runManager.SetUserInitialization(MyPhysicsList())
     runManager.SetUserInitialization(QGSP_BERT_HP())
     # Run action
     logger.info("Loading the user action initialization")

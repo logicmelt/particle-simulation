@@ -1,0 +1,28 @@
+# Use TSG_OFFSCREEN
+/vis/open TSG_OFFSCREEN
+# Add the volumes
+/vis/drawVolume
+
+# Change camera's initial position
+/vis/viewer/set/viewpointVector 1 1 1
+# Set the upwards direction to the z-axis
+/vis/viewer/set/upVector 0 0 1
+# And to focus on the geometry
+/vis/viewer/set/targetPoint 0 0 6406 km
+/vis/viewer/zoom 2
+
+# Plot the trajectories
+/vis/scene/add/trajectories smooth
+# Plot a 10km scale
+/vis/scene/add/scale 10 km
+# Plot axes
+/vis/scene/add/axes 0 0 6371 10 km
+# By using this command the visualized events per run will accumulate instead of being removed
+/vis/scene/endOfEventAction accumulate
+# Draw the magnetic field
+/vis/scene/add/magneticField
+
+/run/beamOn 1
+
+/vis/viewer/refresh
+

@@ -1,5 +1,5 @@
 save_dir: "test_data/" # Directory where the output files will be saved
-macro_files: ["additional_files/vis.mac"] # Path to the macro files that will be executed, order matters if more than one
+macro_files: ["additional_files/vis_curved.mac"] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
 
 # Particle generator
@@ -9,8 +9,8 @@ generator:
     n_events: 1 # Number of events to be generated per run
     energy: 300 # Energy of the primary particle in GeV
     particle: "chargedgeantino" # Particle type
-    position: [0, 0, 35] # Initial position of the primary particle in km
-                         # Remember that this position is with respect the geometry's center, e.g. for a flat geometry it's the center of the box
+    position: [0, 0, 6441] # Initial position of the primary particle in km
+                           # Remember that this position is with respect the center of the geometry, e.g. for a flat geometry it would be the box's center
     direction: [0, 0, -1] # Direction of the momentum of the primary particle
   
 # Detector
@@ -22,14 +22,14 @@ constructor:
 
   sensitive_detectors:
     enabled: True # Enable the sensitive detectors
-    altitude: [0, 15, 30] # Altitude of the sensitive detectors in km
+    altitude: [0, 15] # Altitude of the sensitive detectors in km
     particles: ["e-", "mu-", "geantino", "chargedgeantino"] # List of particles that will be recorded in the sensitive detectors. 
                                                                       #"all" for all particles.
 
   # Parameters used to generate the custom geometry
   custom:
     export_gdml: True # Export the detector to a GDML file
-    geometry: "flat" # "curved" or "flat". Geometry of the detector
+    geometry: "curved" # "curved" or "flat". Geometry of the detector
     # If the geometry is curved then we need to define the Earth's radius
     earth_radius: 6371 #6371 # Earth's radius in km
     # In both cases we have to define the size of the atmosphere
@@ -39,5 +39,5 @@ constructor:
     atmos_comp: ["N", 70, "O", 27, "Ar", 3] # Material of the atmosphere
     atmos_density: "from_file" # "from_file" or "auto".
     atmos_from_file: "additional_files/density_temp_height.csv" # Path to the CSV file with the density profile
-    atmos_n_points: 20 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
+    atmos_n_points: 10 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
     
