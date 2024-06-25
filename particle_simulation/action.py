@@ -47,12 +47,12 @@ class RunAct(G4UserRunAction):
         analysisManager.CreateNtupleIColumn("particleID")
 
         # Momentum and Position
-        analysisManager.CreateNtupleDColumn("px")
-        analysisManager.CreateNtupleDColumn("py")
-        analysisManager.CreateNtupleDColumn("pz")
-        analysisManager.CreateNtupleDColumn("x")
-        analysisManager.CreateNtupleDColumn("y")
-        analysisManager.CreateNtupleDColumn("z")
+        analysisManager.CreateNtupleDColumn("px[MeV]")
+        analysisManager.CreateNtupleDColumn("py[MeV]")
+        analysisManager.CreateNtupleDColumn("pz[MeV]")
+        analysisManager.CreateNtupleDColumn("x[mm]")
+        analysisManager.CreateNtupleDColumn("y[mm]")
+        analysisManager.CreateNtupleDColumn("z[mm]")
 
     def BeginOfRunAction(self, run: G4Run):
         # Open an output file

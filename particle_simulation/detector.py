@@ -2,11 +2,13 @@ from geant4_pybind import G4VSensitiveDetector, G4Step, G4TouchableHistory, G4An
 import logging
 
 class SensDetector(G4VSensitiveDetector):
-    def __init__(self, config: dict, name: str):
+    def __init__(self, config: dict, name: str, correction_factor: float = 0.0):
         super().__init__(name)
         self.config = config
         self.accepted_particles = self.config["sensitive_detectors"]["particles"]
         self.accepted_particles.append("all")
+        # Correction factor to the z-axis of the particles due to the geometry.
+        self.correction_factor = correction_factor
         self.track_list = set()
         self.logger = logging.getLogger("main")
 
@@ -49,7 +51,7 @@ class SensDetector(G4VSensitiveDetector):
         analysisManager.FillNtupleDColumn(6, momentum.z)
         analysisManager.FillNtupleDColumn(7, position.x)
         analysisManager.FillNtupleDColumn(8, position.y)
-        analysisManager.FillNtupleDColumn(9, position.z)
+        analysisManager.FillNtupleDColumn(9, position.z - self.correction_factor)
 
         # Add to the Ntuple
         analysisManager.AddNtupleRow(0)

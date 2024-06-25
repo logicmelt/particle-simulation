@@ -142,7 +142,8 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         if self.sensitive_detector is not None:
             sdManager = G4SDManager.GetSDMpointer()
             for i in range(len(self.sensitive_detector)):
-                sensitive_det = particle_simulation.detector.SensDetector(self.config, "sensitive_detector_" + str(i))
+                # We add the correction factor to the sensitive detector so that we the z-axis is distance from the surface.
+                sensitive_det = particle_simulation.detector.SensDetector(self.config, "sensitive_detector_" + str(i), self.correction_factor)
                 sdManager.AddNewDetector(sensitive_det)
                 self.sensitive_detector[i].SetSensitiveDetector(sensitive_det)
 
