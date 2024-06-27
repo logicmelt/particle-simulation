@@ -1,6 +1,6 @@
 save_dir: "test_data/" # Directory where the output files will be saved
 random_seed: 42 # Seed for the random number generator
-n_processes: 10 # Number of processes to be used in the simulation
+n_processes: 20 # Number of processes to be used in the simulation
 macro_files: ["additional_files/macro_files/gps_flat.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
 
@@ -24,7 +24,7 @@ constructor:
 
   sensitive_detectors:
     enabled: True # Enable the sensitive detectors
-    altitude: [0, 15] # Altitude of the sensitive detectors in km
+    altitude: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] # Altitude of the sensitive detectors in km
     particles: ["mu-", "chargedgeantino", "geantino"] # List of particles that will be recorded in the sensitive detectors. 
                                                                       #"all" for all particles.
 

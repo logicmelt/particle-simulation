@@ -72,8 +72,9 @@ class RunAct(G4UserRunAction):
         analysisManager = G4AnalysisManager.Instance()
         idrun = run.GetRunID()
         # Reset the analysis manager
-        analysisManager.OpenFile(str(self.save_dir / f"hits_run_{idrun}_proc_{self.processNum}.csv"))
-        self.logger.info(f"Creating the output file: {self.save_dir}/hits_{idrun}.csv")
+        output_file = str(self.save_dir / f"hits_run_{idrun}_proc_{self.processNum}.csv")
+        analysisManager.OpenFile(output_file)
+        self.logger.info(f"Creating the output file: {output_file}")
         analysisManager.FinishNtuple(0)
 
     def EndOfRunAction(self, run: G4Run):
