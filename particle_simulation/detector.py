@@ -15,7 +15,6 @@ class SensDetector(G4VSensitiveDetector):
         self.accepted_particles = set(self.config["sensitive_detectors"]["particles"])
         # Correction factor to the z-axis of the particles due to the geometry.
         self.correction_factor = correction_factor
-        self.track_list = set()
         self.logger = logging.getLogger("main")
         self.logger.debug(self.accepted_particles)
 
@@ -38,12 +37,6 @@ class SensDetector(G4VSensitiveDetector):
         # Get Event ID and Track ID
         event_id = G4RunManager.GetRunManager().GetCurrentEvent().GetEventID()
         track_id = track.GetTrackID()
-
-        # To avoid duplicates check if the track ID is already in the list. We only care about the first hit
-        if track_id in self.track_list:
-            return True
-        # Add the track ID to the list
-        self.track_list.add(track_id)
 
         # Get the momentum and position
         momentum = step.GetPreStepPoint().GetMomentum()
