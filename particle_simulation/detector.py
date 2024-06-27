@@ -1,16 +1,23 @@
-from geant4_pybind import G4VSensitiveDetector, G4Step, G4TouchableHistory, G4AnalysisManager, G4RunManager
+from geant4_pybind import (
+    G4VSensitiveDetector,
+    G4Step,
+    G4TouchableHistory,
+    G4AnalysisManager,
+    G4RunManager,
+)
 import logging
+
 
 class SensDetector(G4VSensitiveDetector):
     def __init__(self, config: dict, name: str, correction_factor: float = 0.0):
         super().__init__(name)
         self.config = config
-        self.accepted_particles = self.config["sensitive_detectors"]["particles"]
-        self.accepted_particles.append("all")
+        self.accepted_particles = set(self.config["sensitive_detectors"]["particles"])
         # Correction factor to the z-axis of the particles due to the geometry.
         self.correction_factor = correction_factor
         self.track_list = set()
         self.logger = logging.getLogger("main")
+        self.logger.debug(self.accepted_particles)
 
     def ProcessHits(self, step: G4Step, history: G4TouchableHistory):
         # Get the analysis manager (Singleton)
@@ -24,9 +31,10 @@ class SensDetector(G4VSensitiveDetector):
         particle_type = track.GetParticleDefinition().GetParticleName()
 
         # Check if the particle is in the accepted particles
-        if particle_type not in self.accepted_particles:
+        if (particle_type not in self.accepted_particles) and (
+            "all" not in self.accepted_particles
+        ):
             return True
-
         # Get Event ID and Track ID
         event_id = G4RunManager.GetRunManager().GetCurrentEvent().GetEventID()
         track_id = track.GetTrackID()
@@ -36,7 +44,7 @@ class SensDetector(G4VSensitiveDetector):
             return True
         # Add the track ID to the list
         self.track_list.add(track_id)
-        
+
         # Get the momentum and position
         momentum = step.GetPreStepPoint().GetMomentum()
         position = step.GetPreStepPoint().GetPosition()

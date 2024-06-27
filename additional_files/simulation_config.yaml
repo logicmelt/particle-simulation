@@ -1,10 +1,10 @@
 save_dir: "test_data/" # Directory where the output files will be saved
-macro_files: ["additional_files/vis_curved.mac"] # Path to the macro files that will be executed, order matters if more than one
+macro_files: ["additional_files/macro_files/gps_flat.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
 
 # Particle generator
 generator:
-  type: "particle_gun" # "gps" or "particle_gun". GPS parameters are given through a macro file
+  type: "gps" # "gps" or "particle_gun". GPS parameters are given through a macro file
   parameters: # Parameters for the particle gun (Initial values that can be changed in the macro file)
     n_events: 1 # Number of events to be generated per run
     energy: 300 # Energy of the primary particle in GeV
@@ -17,19 +17,19 @@ generator:
 constructor:
   input: custom # "gdml" or "custom". If custom is chosen additional parameters are required.
   gdml_file: "test_data/geometry_flat.gdml" # Path to the GDML file
-  mag_file: "additional_files/mag_field_vigo.csv" # Path to the magnetic field file or "None" if no magnetic field is used
+  mag_file: "additional_files/data_files/mag_field_vigo.csv" # Path to the magnetic field file or "None" if no magnetic field is used
                                                   # Units should be in nT
 
   sensitive_detectors:
     enabled: True # Enable the sensitive detectors
-    altitude: [0, 15] # Altitude of the sensitive detectors in km
-    particles: ["e-", "mu-", "geantino", "chargedgeantino"] # List of particles that will be recorded in the sensitive detectors. 
+    altitude: [0, 15, 40] # Altitude of the sensitive detectors in km
+    particles: ["e-", "mu-", "chargedgeantino", "geantino"] # List of particles that will be recorded in the sensitive detectors. 
                                                                       #"all" for all particles.
 
   # Parameters used to generate the custom geometry
   custom:
     export_gdml: True # Export the detector to a GDML file
-    geometry: "curved" # "curved" or "flat". Geometry of the detector
+    geometry: "flat" # "curved" or "flat". Geometry of the detector
     # If the geometry is curved then we need to define the Earth's radius
     earth_radius: 6371 #6371 # Earth's radius in km
     # In both cases we have to define the size of the atmosphere
@@ -38,6 +38,6 @@ constructor:
     atmos_height: 70 # Atmosphere height in km
     atmos_comp: ["N", 70, "O", 27, "Ar", 3] # Material of the atmosphere
     atmos_density: "from_file" # "from_file" or "auto".
-    atmos_from_file: "additional_files/density_temp_height.csv" # Path to the CSV file with the density profile
+    atmos_from_file: "additional_files/data_files/density_temp_height.csv" # Path to the CSV file with the density profile
     atmos_n_points: 10 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
     

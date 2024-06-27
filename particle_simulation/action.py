@@ -1,11 +1,16 @@
-from geant4_pybind import G4VUserActionInitialization, G4UserRunAction, G4Run, G4AnalysisManager
+from geant4_pybind import (
+    G4VUserActionInitialization,
+    G4UserRunAction,
+    G4Run,
+    G4AnalysisManager,
+    G4UserTrackingAction,
+)
 from particle_simulation.generator import GPSGenerator, ParticleGunGenerator
 import logging
+import pathlib
 
-GENERATORS = {
-    "gps": GPSGenerator,
-    "particle_gun": ParticleGunGenerator
-}
+GENERATORS = {"gps": GPSGenerator, "particle_gun": ParticleGunGenerator}
+
 
 class ActionInitialization(G4VUserActionInitialization):
     def __init__(self, config: dict):
@@ -23,6 +28,8 @@ class ActionInitialization(G4VUserActionInitialization):
         self.SetUserAction(gen)
         # Set the user run action
         self.SetUserAction(RunAct(self.config))
+        # Set the user tracking action
+        # self.SetUserAction(TrackingAction(self.config))
 
 
 class RunAct(G4UserRunAction):
@@ -30,7 +37,7 @@ class RunAct(G4UserRunAction):
         super().__init__()
         self.config = config
         self.logger = logging.getLogger("main")
-        self.save_dir = self.config["save_dir"]
+        self.save_dir = pathlib.Path(self.config["save_dir"])
         # Create an analysis manager
         # This is a singleton class, so we can access it from anywhere
         analysisManager = G4AnalysisManager.Instance()
@@ -54,11 +61,16 @@ class RunAct(G4UserRunAction):
         analysisManager.CreateNtupleDColumn("y[mm]")
         analysisManager.CreateNtupleDColumn("z[mm]")
 
+        # Create 1d Histogram for the energy spectrum
+        # ih = analysisManager.CreateH1("0", "energy spectrum dN/dE = f(E)", 1000, 400, 340000)
+        # analysisManager.SetH1Activation(ih, False)
+
     def BeginOfRunAction(self, run: G4Run):
         # Open an output file
         analysisManager = G4AnalysisManager.Instance()
         idrun = run.GetRunID()
-        analysisManager.OpenFile(f"{self.save_dir}/hits_{idrun}.csv")
+        # Reset the analysis manager
+        analysisManager.OpenFile(str(self.save_dir / f"hits_{idrun}.csv"))
         self.logger.info(f"Creating the output file: {self.save_dir}/hits_{idrun}.csv")
         analysisManager.FinishNtuple(0)
 
@@ -70,3 +82,17 @@ class RunAct(G4UserRunAction):
         # Close the file
         analysisManager.CloseFile()
         self.logger.info("Finished writing the data to the output file")
+
+
+class TrackingAction(G4UserTrackingAction):
+    def __init__(self, config: dict):
+        super().__init__()
+        self.config = config
+        self.logger = logging.getLogger("main")
+
+    def PreUserTrackingAction(self, track):
+        # Get the analysis manager
+        analysisManager = G4AnalysisManager.Instance()
+        # Fill the data
+        kinetic_energy = track.GetKineticEnergy()
+        analysisManager.FillH1(0, kinetic_energy)

@@ -1,17 +1,24 @@
-from geant4_pybind import G4UImanager, G4RunManagerFactory, G4RunManagerType, G4VisExecutive, QGSP_BERT_HP
+from geant4_pybind import (
+    G4UImanager,
+    G4RunManagerFactory,
+    G4RunManagerType,
+    G4VisExecutive,
+    QGSP_BERT_HP,
+)
 from particle_simulation.construction import DetectorConstruction
 from particle_simulation.action import ActionInitialization
 from particle_simulation.utils import create_logger, load_config
 import argparse
+
 
 def main(config_file: str):
     # Load the configuration file
     config = load_config(config_file)
 
     # Create a logger
-    logger = create_logger("main", 
-                           config["save_dir"]+"running.log", 
-                           config.get("logger_level", "INFO"))
+    logger = create_logger(
+        "main", config["save_dir"] + "running.log", config.get("logger_level", "INFO")
+    )
 
     # Macro files
     macro_files = config["macro_files"]
@@ -49,9 +56,12 @@ def main(config_file: str):
             uiManager.ApplyCommand(f"/control/execute {macro}")
     logger.info("Finished running the macro files")
 
+
 if __name__ == "__main__":
     # Get the configuration file from the command line
-    parser = argparse.ArgumentParser(description="Particle simulation of a cosmic shower using Geant4 and Python.")
+    parser = argparse.ArgumentParser(
+        description="Particle simulation of a cosmic shower using Geant4 and Python."
+    )
     parser.add_argument("config_file", type=str, help="Configuration yaml file")
     args = parser.parse_args()
     # Run the main function

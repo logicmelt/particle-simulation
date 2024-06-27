@@ -10,21 +10,23 @@ LOGGER_LEVEL = {
     "INFO": logging.INFO,
     "WARNING": logging.WARNING,
     "ERROR": logging.ERROR,
-    "CRITICAL": logging.CRITICAL
+    "CRITICAL": logging.CRITICAL,
 }
 
-def load_config(config_file: str)-> dict:
+
+def load_config(config_file: str) -> dict:
     """Loads a configuration file in YAML format.
-    
+
     Args:
         config_file (str): The path to the configuration file.
-        
+
     Returns:
         dict: The configuration file read as a dictionary.
     """
-    with open(config_file, 'r') as f:
+    with open(config_file, "r") as f:
         config = yaml.safe_load(f)
     return config
+
 
 def create_logger(name: str, log_file: str, level: str = "INFO") -> logging.Logger:
     """
@@ -44,12 +46,15 @@ def create_logger(name: str, log_file: str, level: str = "INFO") -> logging.Logg
     logger = logging.getLogger(name)
     logger.setLevel(level)
     # Output file and log format
-    FORMAT = logging.Formatter('%(asctime)s - %(filename)s->%(funcName)s():%(lineno)s - [%(levelname)s] - %(message)s')
+    FORMAT = logging.Formatter(
+        "%(asctime)s - %(filename)s->%(funcName)s():%(lineno)s - [%(levelname)s] - %(message)s"
+    )
     file_handler = logging.FileHandler(log_file, mode="w", encoding=None, delay=False)
     file_handler.setFormatter(FORMAT)
     logger.addHandler(file_handler)
     # Return the logger
     return logger
+
 
 def get_mag_field(lat: float, lon: float, alt: float, date: str) -> tuple:
     """
@@ -76,13 +81,26 @@ def get_mag_field(lat: float, lon: float, alt: float, date: str) -> tuple:
     data = json.loads(response.text)
 
     # There is a - sign in the vertical intensity because the z-axis is pointing down
-    x, = data['geomagnetic-field-model-result']["field-value"]["north-intensity"]["value"], 
-    y, = data['geomagnetic-field-model-result']["field-value"]["east-intensity"]["value"], 
-    z = -data['geomagnetic-field-model-result']["field-value"]["vertical-intensity"]["value"]
+    (x,) = (
+        data["geomagnetic-field-model-result"]["field-value"]["north-intensity"][
+            "value"
+        ],
+    )
+    (y,) = (
+        data["geomagnetic-field-model-result"]["field-value"]["east-intensity"][
+            "value"
+        ],
+    )
+    z = -data["geomagnetic-field-model-result"]["field-value"]["vertical-intensity"][
+        "value"
+    ]
 
     return x, y, z
 
-def create_mag_file(lat: list[float], lon: list[float], alt: list[float], date: list[str], filename: str):
+
+def create_mag_file(
+    lat: list[float], lon: list[float], alt: list[float], date: list[str], filename: str
+):
     """
     Create a magnetic field file based on the given latitude, longitude, and altitude values.
 
@@ -96,7 +114,15 @@ def create_mag_file(lat: list[float], lon: list[float], alt: list[float], date: 
     Returns:
         None
     """
-    data = {"x": [], "y": [], "z": [], "altitude": [], "latitude": [], "longitude": [], "date": []}
+    data = {
+        "x": [],
+        "y": [],
+        "z": [],
+        "altitude": [],
+        "latitude": [],
+        "longitude": [],
+        "date": [],
+    }
     # We need to iterate over the lists of lat, lon and alt
     combinations = itertools.product(lat, lon, alt, date)
     for comb in combinations:
