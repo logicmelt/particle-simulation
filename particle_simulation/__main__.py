@@ -4,22 +4,30 @@ from geant4_pybind import (
     G4RunManagerType,
     G4VisExecutive,
     QGSP_BERT_HP,
+    G4Random,
 )
 from particle_simulation.construction import DetectorConstruction
 from particle_simulation.action import ActionInitialization
 from particle_simulation.utils import create_logger, load_config
-import argparse
+import argparse, multiprocessing, datetime, pathlib, itertools
 
 
-def main(config_file: str):
-    # Load the configuration file
-    config = load_config(config_file)
+def main(config: dict, processNum: int = 1):
+    save_dir = pathlib.Path(config["save_dir"])
 
     # Create a logger
     logger = create_logger(
-        "main", config["save_dir"] + "running.log", config.get("logger_level", "INFO")
+        "main",
+        save_dir / f"running_{processNum}.log",
+        config.get("logger_level", "INFO"),
     )
-
+    logger.info(f"Running process: {processNum}/{config.get('n_processes', 1)}")
+    
+    # Set the random seed
+    random_seed = config.get("random_seed", datetime.datetime.now().timestamp())
+    G4Random.getTheEngine().setSeed(int(processNum + random_seed), 0)
+    logger.info(f"Random seed: {int(processNum + random_seed)}")
+    
     # Macro files
     macro_files = config["macro_files"]
 
@@ -35,7 +43,7 @@ def main(config_file: str):
     runManager.SetUserInitialization(QGSP_BERT_HP())
     # Run action
     logger.info("Loading the user action initialization")
-    runManager.SetUserInitialization(ActionInitialization(config))
+    runManager.SetUserInitialization(ActionInitialization(config, processNum))
 
     # Initialize the run manager
     runManager.Initialize()
@@ -64,5 +72,17 @@ if __name__ == "__main__":
     )
     parser.add_argument("config_file", type=str, help="Configuration yaml file")
     args = parser.parse_args()
-    # Run the main function
-    main(args.config_file)
+
+    # Load the configuration file
+    config = load_config(args.config_file)
+    # Get the number of processes
+    n_processes = config.get("n_processes", 1)
+    if n_processes == 1:
+        main(config, n_processes)
+    else:
+        list_processes = list(range(1, n_processes + 1))
+        # Zip the configuration with the process number
+        params = zip(itertools.repeat(config), list_processes)
+        with multiprocessing.Pool(n_processes) as pool:
+            pool.starmap(main,  params)
+

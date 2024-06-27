@@ -1,4 +1,6 @@
 save_dir: "test_data/" # Directory where the output files will be saved
+random_seed: 42 # Seed for the random number generator
+n_processes: 2 # Number of processes to be used in the simulation
 macro_files: ["additional_files/macro_files/gps_flat.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
 
@@ -22,8 +24,8 @@ constructor:
 
   sensitive_detectors:
     enabled: True # Enable the sensitive detectors
-    altitude: [0, 15, 40] # Altitude of the sensitive detectors in km
-    particles: ["e-", "mu-", "chargedgeantino", "geantino"] # List of particles that will be recorded in the sensitive detectors. 
+    altitude: [0, 15] # Altitude of the sensitive detectors in km
+    particles: ["mu-", "chargedgeantino", "geantino"] # List of particles that will be recorded in the sensitive detectors. 
                                                                       #"all" for all particles.
 
   # Parameters used to generate the custom geometry
@@ -39,5 +41,5 @@ constructor:
     atmos_comp: ["N", 70, "O", 27, "Ar", 3] # Material of the atmosphere
     atmos_density: "from_file" # "from_file" or "auto".
     atmos_from_file: "additional_files/data_files/density_temp_height.csv" # Path to the CSV file with the density profile
-    atmos_n_points: 10 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
+    atmos_n_points: 100 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
     

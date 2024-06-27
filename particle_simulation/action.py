@@ -13,12 +13,13 @@ GENERATORS = {"gps": GPSGenerator, "particle_gun": ParticleGunGenerator}
 
 
 class ActionInitialization(G4VUserActionInitialization):
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, processNum: int):
         super().__init__()
         self.config = config
         # Create the generator
         self.generator = self.config["generator"]["type"]
         self.logger = logging.getLogger("main")
+        self.processNum = processNum
 
     def Build(self):
         # In this function we can create Run, Event and Tracking actions (e.g.: Saving data per track, event, etc.)
@@ -27,17 +28,18 @@ class ActionInitialization(G4VUserActionInitialization):
         # Set the generator as user action
         self.SetUserAction(gen)
         # Set the user run action
-        self.SetUserAction(RunAct(self.config))
+        self.SetUserAction(RunAct(self.config, self.processNum))
         # Set the user tracking action
         # self.SetUserAction(TrackingAction(self.config))
 
 
 class RunAct(G4UserRunAction):
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, processNum: int):
         super().__init__()
         self.config = config
         self.logger = logging.getLogger("main")
         self.save_dir = pathlib.Path(self.config["save_dir"])
+        self.processNum = processNum
         # Create an analysis manager
         # This is a singleton class, so we can access it from anywhere
         analysisManager = G4AnalysisManager.Instance()
@@ -70,7 +72,7 @@ class RunAct(G4UserRunAction):
         analysisManager = G4AnalysisManager.Instance()
         idrun = run.GetRunID()
         # Reset the analysis manager
-        analysisManager.OpenFile(str(self.save_dir / f"hits_{idrun}.csv"))
+        analysisManager.OpenFile(str(self.save_dir / f"hits_run_{idrun}_proc_{self.processNum}.csv"))
         self.logger.info(f"Creating the output file: {self.save_dir}/hits_{idrun}.csv")
         analysisManager.FinishNtuple(0)
 

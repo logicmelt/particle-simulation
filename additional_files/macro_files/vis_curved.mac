@@ -22,7 +22,11 @@
 # Draw the magnetic field
 /vis/scene/add/magneticField
 
-/run/beamOn 1000000
+# Limit the amount of lines in the end plot.
+/tracking/storeTrajectory 0
+/vis/scene/endOfEventAction accumulate 1
+
+/run/beamOn 100
 
 /vis/viewer/refresh
 
