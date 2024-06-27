@@ -30,7 +30,7 @@ constructor:
 
   # Parameters used to generate the custom geometry
   custom:
-    export_gdml: True # Export the detector to a GDML file
+    export_gdml: False # Export the detector to a GDML file. Don't use this option if you are using multiprocessing
     geometry: "flat" # "curved" or "flat". Geometry of the detector
     # If the geometry is curved then we need to define the Earth's radius
     earth_radius: 6371 #6371 # Earth's radius in km
