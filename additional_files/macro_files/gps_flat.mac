@@ -9,7 +9,7 @@
 
 # Angular distribution
 /gps/ang/type iso
-/gps/ang/maxtheta 10 deg
+/gps/ang/maxtheta 35 deg
 
 # Energy spectra, read from a file
 /gps/ene/type Arb

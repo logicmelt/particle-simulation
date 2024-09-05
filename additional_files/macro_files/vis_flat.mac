@@ -19,7 +19,13 @@
 /tracking/storeTrajectory 0
 /vis/scene/endOfEventAction accumulate 1
 
-/run/beamOn 1000
+# Set a global production cut
+/run/setCut 1 m
+/run/initialize
+/run/dumpCouples
+
+# Run the beam
+/run/beamOn 10000
 
 /vis/viewer/refresh
 
