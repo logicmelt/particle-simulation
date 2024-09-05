@@ -51,7 +51,7 @@ class UniformMagneticField(G4MagneticField):
         )
         # valueCmd.SetParameterName("field", True)
 
-    def GetFieldValue(self, point, Bfield):
+    def GetFieldValue(self, Point, Bfield):
         Bfield[0] = self.fbx
         Bfield[1] = self.fby
         Bfield[2] = self.fbz
