@@ -1,6 +1,6 @@
 save_dir: "test_data/" # Directory where the output files will be saved
 random_seed: 42 # Seed for the random number generator
-n_processes: 10 # Number of processes to be used in the simulation
+n_processes: 5 # Number of processes to be used in the simulation
 macro_files: ["additional_files/macro_files/gps_flat.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
 
