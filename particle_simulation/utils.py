@@ -4,6 +4,8 @@ import pandas as pd
 import itertools
 import logging
 import yaml
+import pathlib
+import os
 
 LOGGER_LEVEL = {
     "DEBUG": logging.DEBUG,
@@ -41,10 +43,10 @@ def create_logger(name: str, log_file: str, level: str = "INFO") -> logging.Logg
         logging.Logger: The logger instance.
     """
     # Get the logging level
-    level = LOGGER_LEVEL.get(level)
+    level_log = LOGGER_LEVEL.get(level)
     # Create the logger and set it to the desired level
     logger = logging.getLogger(name)
-    logger.setLevel(level)
+    logger.setLevel(level_log)
     # Output file and log format
     FORMAT = logging.Formatter(
         "%(asctime)s - %(filename)s->%(funcName)s():%(lineno)s - [%(levelname)s] - %(message)s"
@@ -137,3 +139,37 @@ def create_mag_file(
     # Create a DataFrame and save it to a CSV file
     df = pd.DataFrame(data)
     df.to_csv(filename, index=False)
+
+def create_incremental_outdir(outdir: pathlib.Path, structure: str = "") -> pathlib.Path:
+    """Creates a folder and increases the number by 1. Used to create folders for different runs.
+
+    Args:
+        outdir (pathlib.Path): Output path
+        structure (str, optional): Structure that the folders should follow, it will be added a number. Defaults to ''.
+
+    Returns:
+        new_outdir (pathlib.Path): New output dir
+    """
+    create_outdir(outdir)
+    folders = os.listdir(outdir)
+    if len(folders) == 0:
+        create_outdir(outdir / f"{structure}1")
+        new_outdir = outdir / f"{structure}1"
+        return new_outdir
+    if structure == "":
+        numbers = [int(f) for f in folders]
+    else:
+        numbers = [int(f.split(structure)[-1]) for f in folders]
+    create_outdir(outdir / f"{structure}{max(numbers)+1}")
+    new_outdir = outdir / f"{structure}{max(numbers)+1}"
+    return new_outdir
+
+def create_outdir(outdir: pathlib.Path):
+    """Creates a folder if it doesn't exist
+
+    Args:
+        outdir (pathlib.Path): Path to folder
+    """
+    if not outdir.exists():
+        outdir.mkdir(parents=True)
+    return outdir

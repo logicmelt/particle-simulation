@@ -8,13 +8,16 @@ from geant4_pybind import (
 )
 from particle_simulation.construction import DetectorConstruction
 from particle_simulation.action import ActionInitialization
-from particle_simulation.utils import create_logger, load_config
+from particle_simulation.utils import (
+    create_logger,
+    load_config,
+    create_incremental_outdir,
+)
 import argparse, multiprocessing, datetime, pathlib, itertools
 
 
 def main(config: dict, processNum: int = 1):
     save_dir = pathlib.Path(config["save_dir"])
-
     # Create a logger
     logger = create_logger(
         "main",
@@ -22,12 +25,12 @@ def main(config: dict, processNum: int = 1):
         config.get("logger_level", "INFO"),
     )
     logger.info(f"Running process: {processNum}/{config.get('n_processes', 1)}")
-    
+
     # Set the random seed
     random_seed = config.get("random_seed", datetime.datetime.now().timestamp())
     G4Random.getTheEngine().setSeed(int(processNum + random_seed), 0)
     logger.info(f"Random seed: {int(processNum + random_seed)}")
-    
+
     # Macro files
     macro_files = config["macro_files"]
 
@@ -75,6 +78,13 @@ if __name__ == "__main__":
 
     # Load the configuration file
     config = load_config(args.config_file)
+
+    # Create the save directory if it does not exist
+    save_dir = pathlib.Path(config["save_dir"])
+    save_dir = create_incremental_outdir(save_dir)
+    # Update the save directory in the configuration
+    config["save_dir"] = save_dir
+
     # Get the number of processes
     n_processes = config.get("n_processes", 1)
     if n_processes == 1:
@@ -84,5 +94,4 @@ if __name__ == "__main__":
         # Zip the configuration with the process number
         params = zip(itertools.repeat(config), list_processes)
         with multiprocessing.Pool(n_processes) as pool:
-            pool.starmap(main,  params)
-
+            pool.starmap(main, params)

@@ -28,7 +28,8 @@ COPY pyproject.toml poetry.lock README.md ./
 RUN poetry check --lock && poetry install
 
 # Copy the rest of the code
-COPY . /app
+ADD additional_files /app/additional_files
+ADD particle_simulation /app/particle_simulation
 
 # Change to the app directory
 WORKDIR /app
