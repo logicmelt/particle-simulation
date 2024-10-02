@@ -5,25 +5,46 @@ from geant4_pybind import (
     G4AnalysisManager,
     G4RunManager,
 )
+from typing import Any
 import logging
 
 
 class SensDetector(G4VSensitiveDetector):
-    def __init__(self, config: dict, name: str, correction_factor: float = 0.0):
+    def __init__(
+        self, config: dict[str, Any], name: str, correction_factor: float = 0.0
+    ) -> None:
+        """Initializes a sensitive detector that will be used to save data from the simulation.
+
+        Args:
+            config (dict[str, Any]): The configuration dictionary.
+            name (str): Name of the sensitive detector.
+            correction_factor (float, optional): Correction factor to the z-axis of the particles due to the geometry. Defaults to 0.0.
+        """
         super().__init__(name)
         self.config = config
-        self.accepted_particles = set(self.config["sensitive_detectors"]["particles"])
+        self.accepted_particles: set[str] = set(
+            self.config["sensitive_detectors"]["particles"]
+        )
         # Correction factor to the z-axis of the particles due to the geometry.
         self.correction_factor = correction_factor
         self.logger = logging.getLogger("main")
         self.logger.debug(self.accepted_particles)
 
-    def ProcessHits(self, step: G4Step, history: G4TouchableHistory):
+    def ProcessHits(self, arg0: G4Step, arg1: G4TouchableHistory) -> bool:
+        """This function is called when a particle hits the sensitive detector.
+
+        Args:
+            arg0 (G4Step): Steps of the particle from where we can extract information.
+            arg1 (G4TouchableHistory): Touchable detector element (Physical volume, logical volume...).
+
+        Returns:
+            bool: True if the hit was processed successfully.
+        """
         # Get the analysis manager (Singleton)
         analysisManager = G4AnalysisManager.Instance()
 
         # Get the track
-        track = step.GetTrack()
+        track = arg0.GetTrack()
 
         # From the track get particle type and ID
         particle = track.GetParticleDefinition().GetPDGEncoding()
@@ -39,8 +60,8 @@ class SensDetector(G4VSensitiveDetector):
         track_id = track.GetTrackID()
 
         # Get the momentum and position
-        momentum = step.GetPreStepPoint().GetMomentum()
-        position = step.GetPreStepPoint().GetPosition()
+        momentum = arg0.GetPreStepPoint().GetMomentum()
+        position = arg0.GetPreStepPoint().GetPosition()
 
         # Fill the N tuple
         analysisManager.FillNtupleIColumn(0, event_id)

@@ -5,6 +5,8 @@ from geant4_pybind import (
     G4Material,
     G4GDMLParser,
     G4VUserDetectorConstruction,
+    G4doubleVector,
+    G4VPhysicalVolume,
 )
 from geant4_pybind import (
     G4Box,
@@ -12,11 +14,14 @@ from geant4_pybind import (
     G4LogicalVolume,
     G4PVPlacement,
     G4ThreeVector,
+    G4RotationMatrix,
     G4MagneticField,
     G4FieldManager,
     G4SDManager,
     G4GenericMessenger,
 )
+
+from typing import Any
 
 # Import units
 from geant4_pybind import kelvin, kg, m3, perCent, radian, km, mm, tesla
@@ -32,10 +37,22 @@ import logging
 
 # TODO: Are the sensitive sensors too big? Worried that some particles might be created inside the sensitive detector and trigger
 # TODO: Need to correct the altitude of the magnetic field given that with boxes we start at -height/2 and with spheres at earths_radius
+# TODO: Reading from GDML files is a pain in the back. If the GDML file is generated using this package we are ok,
+# otherwise we need to check the order and altitude so that we can associate the correct value of the magnetic field.
+# TODO: Several sensitive detectors might be problematic if all of them have to write files. Too much i/o
+# TODO: We are using only ONE day from the dataset for the density and temperature
+# TODO: Add different interpolation methods for the density and temperature
 
 
 class UniformMagneticField(G4MagneticField):
-    def __init__(self, x: float, y: float, z: float):
+    def __init__(self, x: float, y: float, z: float) -> None:
+        """Creates a uniform magnetic field in cartesian coordinates.
+
+        Args:
+            x (float): x component of the magnetic field in Tesla.
+            y (float): y component of the magnetic field in Tesla.
+            z (float): z component of the magnetic field in Tesla.
+        """
         super().__init__()
         self.fbx = x * tesla
         self.fby = y * tesla
@@ -51,25 +68,43 @@ class UniformMagneticField(G4MagneticField):
         )
         # valueCmd.SetParameterName("field", True)
 
-    def GetFieldValue(self, Point, Bfield):
+    def GetFieldValue(self, Point: G4doubleVector, Bfield: list[float]) -> None:
+        """Get the magnetic field at a given point.
+
+        Args:
+            Point (G4doubleVector): The point where the field is calculated.
+            Bfield (list[float]): The magnetic field at the given point.
+        """
         Bfield[0] = self.fbx
         Bfield[1] = self.fby
         Bfield[2] = self.fbz
         # Alternatively you can return the field as an array
         # return [0, self.fBy, 0]
 
-    def SetFieldy(self, val: float):
+    def SetFieldy(self, val: float) -> None:
+        """Set the y component of the magnetic field.
+
+        Args:
+            val (float): The value of the y component of the magnetic field in Tesla.
+        """
         self.fby = val
 
 
 class DetectorConstruction(G4VUserDetectorConstruction):
-    def __init__(self, config: dict):
+    def __init__(self, config: dict[str, Any]) -> None:
+        """Constructs the geometry of the detector from the configuration file.
+
+        Args:
+            config (dict[str, Any]): The configuration file with the parameters of the detector.
+        """
         super().__init__()
-        self.config = config["constructor"]
-        self.save_dir = config["save_dir"]
-        self.logic_volume = None
-        self.sensitive_detector = None
-        self.correction_factor = 0  # Correction factor to translate the altitude from the input positions to the actual positions within the geometry.
+        self.config: dict[str, Any] = config["constructor"]
+        self.save_dir: str = config["save_dir"]
+        self.logic_volume: np.ndarray = np.array([])
+        self.sensitive_detector: np.ndarray = np.array([])
+        self.correction_factor: float = (
+            0  # Correction factor to translate the altitude from the input positions to the actual positions within the geometry.
+        )
         # e.g: If the altitude is given as 0, it will be placed at -total_height/2 for a box and at earths_radius for a sphere
 
         # Logger
@@ -83,21 +118,23 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         self.gdml_parser = G4GDMLParser()
 
         if self.config["input"] == "gdml":
-            self.gdml_file = self.config["gdml_file"]
-            self.density_points = None
+            self.gdml_file: str = self.config["gdml_file"]
+            self.density_points: int = 0
         else:
             # Get some parameters as attributes
             self.density_points = self.config["custom"]["atmos_n_points"]
-            self.atmosphere_height = (
+            self.atmosphere_height: float = (
                 self.config["custom"]["atmos_height"] * km
             )  # Height of the atmosphere
-            self.size = (
+            self.size: float = (
                 self.config["custom"]["atmos_size"] * km
             )  # Size of the world volume. Arc lenght for the sphere, side for the box
-            self.shape = self.config["custom"]["geometry"]  # Shape of the world volume
+            self.shape: str = self.config["custom"][
+                "geometry"
+            ]  # Shape of the world volume
 
             # Export the geometry to a GDML file
-            self.export_gdml = self.config["custom"].get("export_gdml", False)
+            self.export_gdml: bool = self.config["custom"].get("export_gdml", False)
 
             # Define the density, temperature and materials
             self.density, self.temp, _ = self.parse_density_temp_from_config()
@@ -106,10 +143,12 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             # Lower and upper limits of the layers
             self.altitude_limits = np.zeros((self.density_points, 2), dtype=float)
 
-    def Construct(self):
-        # TODO: Reading from GDML files is a pain in the back. If the GDML file is generated using this package we are ok,
-        # otherwise we need to check the order and altitude so that we can associate the correct value of the magnetic field.
+    def Construct(self) -> G4VPhysicalVolume:
+        """Construct the geometry of the detector.
 
+        Returns:
+            G4VPhysicalVolume: The world volume of the detector.
+        """
         # Construct the geometry
         if self.config["input"] == "gdml":
             # Load the geometry from a GDML file
@@ -148,8 +187,8 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         self.logic_volume = logic_volume
         return world_volume
 
-    def ConstructSDandField(self):
-        # TODO: Several sensitive detectors might be problematic if all of them have to write files. Too much i/o
+    def ConstructSDandField(self) -> None:
+        """Construct the sensitive detectors and magnetic fields if any."""
         # Add sensitive detectors and magnetic fields if any
         if self.mag_field is not None:
             self.logger.info("Adding the magnetic field")
@@ -158,7 +197,9 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             # Add the magnetic field to the layers
             for i in range(self.density_points):
                 # Get the altitude of the layer
-                altitude = (self.altitude_limits[i][0] + self.altitude_limits[i][1]) / 2
+                altitude: float = (
+                    self.altitude_limits[i][0] + self.altitude_limits[i][1]
+                ) / 2
                 # Search for the magnetic field at that altitude
                 chosen_mag = self.mag_field[
                     np.argmin(np.abs(self.mag_field[:, 3] - altitude))
@@ -186,7 +227,15 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                 sdManager.AddNewDetector(sensitive_det)
                 self.sensitive_detector[i].SetSensitiveDetector(sensitive_det)
 
-    def parse_magnetic_field(self, mag_file: str):
+    def parse_magnetic_field(self, mag_file: str) -> np.ndarray | None:
+        """Parse the magnetic field from a file.
+
+        Args:
+            mag_file (str): The path to the file with the magnetic field.
+
+        Returns:
+            np.ndarray: The magnetic field in cartesian coordinates and altitude. None if no file is provided.
+        """
         # Parse the magnetic field from a file
         if mag_file == "None":
             self.logger.info("No magnetic field file provided")
@@ -201,14 +250,20 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             # Print back the magnetic field and the altitude
             return np.array(open_csv[["x", "y", "z", "altitude"]])
 
-    def construct_flat_world(self):
+    def construct_flat_world(self) -> tuple[G4VPhysicalVolume, np.ndarray]:
+        """Construct a flat world volume with layers of the atmosphere.
+
+        Returns:
+            tuple[G4VPhysicalVolume, np.ndarray]: The world volume and the logical volumes of the layers.
+        """
+
         # Construct a flat world volume including all the layers of the atmosphere
         solidWorld = G4Box(
             "solidWorld", self.size / 2, self.size / 2, self.atmosphere_height / 2
         )
         logicWorld = G4LogicalVolume(solidWorld, self.world_material, "logicWorld")
         physWorld = G4PVPlacement(
-            None, G4ThreeVector(), logicWorld, "physWorld", None, False, 0, True
+            G4RotationMatrix(), G4ThreeVector(), logicWorld, "physWorld", None, False, 0, True  # type: ignore
         )
 
         # The correction factor for a flat world is the altitude of the world volume over 2
@@ -246,7 +301,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                 f"Layer centered at {i * self.atmosphere_height / self.density_points + box_height + self.correction_factor}."
             )
             G4PVPlacement(
-                None,
+                G4RotationMatrix(),
                 G4ThreeVector(
                     0,
                     0,
@@ -301,7 +356,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                 )
                 logicDetector[i] = G4LogicalVolume(
                     solidDetector[i],
-                    self.material[detectors_layer[i]],
+                    self.material[detectors_layer[i]],  # type: ignore
                     "logicDetector_" + str(i),
                 )
                 # The sensitive detector will be a daughter of the layer where it is located
@@ -325,11 +380,11 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                 )
 
                 G4PVPlacement(
-                    None,
+                    G4RotationMatrix(),
                     G4ThreeVector(0, 0, detector_position),
                     logicDetector[i],
                     "physDetector_" + str(i),
-                    logicAtmos[detectors_layer[i]],
+                    logicAtmos[detectors_layer[i]],  # type: ignore
                     False,
                     i,
                     True,
@@ -340,11 +395,16 @@ class DetectorConstruction(G4VUserDetectorConstruction):
 
         return physWorld, logicAtmos
 
-    def construct_spherical_world(self):
+    def construct_spherical_world(self) -> tuple[G4VPhysicalVolume, np.ndarray]:
+        """Construct a spherical world volume with layers of the atmosphere.
+
+        Returns:
+            tuple[G4VPhysicalVolume, np.ndarray]: The world volume and the logical volumes of the layers.
+        """
         # Earth radius
-        earth_rad = self.config["custom"]["earth_radius"] * km
+        earth_rad: float = self.config["custom"]["earth_radius"] * km
         # Get the angle to create the spherical sector
-        angle_sph = self.size / earth_rad * radian
+        angle_sph: float = self.size / earth_rad * radian
 
         # The correction factor in a spherical world is the radius of the earth
         self.correction_factor = earth_rad
@@ -361,7 +421,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         )
         logicWorld = G4LogicalVolume(solidWorld, self.world_material, "logicWorld")
         physWorld = G4PVPlacement(
-            None, G4ThreeVector(0, 0, 0), logicWorld, "physWorld", None, False, 0, True
+            G4RotationMatrix(), G4ThreeVector(0, 0, 0), logicWorld, "physWorld", None, False, 0, True  # type: ignore
         )
 
         # Construct the layers of the atmosphere
@@ -401,7 +461,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                 f"Layers {i} size is {self.atmosphere_height / self.density_points}."
             )
             G4PVPlacement(
-                None,
+                G4RotationMatrix(),
                 G4ThreeVector(0, 0, 0),
                 logicAtmos[i],
                 "physAtmos_" + str(i),
@@ -462,7 +522,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                 )
                 logicDetector[i] = G4LogicalVolume(
                     solidDetector[i],
-                    self.material[detectors_layer[i]],
+                    self.material[detectors_layer[i]],  # type: ignore
                     "logicDetector_" + str(i),
                 )
                 # The sensitive detector will be a daughter of the layer where it is located
@@ -470,11 +530,11 @@ class DetectorConstruction(G4VUserDetectorConstruction):
 
                 # Position of the detector in local coordinates is easy, it's an sphere centered at (0,0,0)
                 G4PVPlacement(
-                    None,
+                    G4RotationMatrix(),
                     G4ThreeVector(0, 0, 0),
                     logicDetector[i],
                     "physDetector_" + str(i),
-                    logicAtmos[detectors_layer[i]],
+                    logicAtmos[detectors_layer[i]],  # type: ignore
                     False,
                     i,
                     True,
@@ -485,7 +545,12 @@ class DetectorConstruction(G4VUserDetectorConstruction):
 
         return physWorld, logicAtmos
 
-    def define_materials(self):
+    def define_materials(self) -> tuple[np.ndarray, G4Material]:
+        """Define the materials of the atmosphere.
+
+        Returns:
+            tuple[np.ndarray, G4Material]: The materials of the layers and the world material.
+        """
         # Define materials from the config file using the Nist manager
         nist_manager = G4NistManager.Instance()
         # The world material is air
@@ -519,9 +584,15 @@ class DetectorConstruction(G4VUserDetectorConstruction):
 
         return mat, world_material
 
-    def parse_density_temp_from_config(self):
-        # TODO: We are using only ONE day from the dataset for the density and temperature
-        # TODO: Add different interpolation methods for the density and temperature
+    def parse_density_temp_from_config(
+        self,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Parse the density and temperature from the configuration file.
+
+        Returns:
+            tuple[np.ndarray, np.ndarray, np.ndarray]: The density, temperature and height of the atmosphere layers interpolated from the file.
+        """
+
         # Parse the density and temperature from the config file
         if self.config["custom"]["atmos_density"] == "from_file":
             # Read the density and temperature profile from a file

@@ -92,6 +92,11 @@ DATASETS = [
 
 
 def check_and_download(data_dir: pathlib.Path) -> None:
+    """Check if the datasets are already in storage, if not, download them.
+
+    Args:
+        data_dir (pathlib.Path): Path to the data directory.
+    """
     # From the list of datasets, check if they are already downloaded, if not, download them
     file_name = [
         (idx, data["name"] + data["version"]) for idx, data in enumerate(DATASETS)
@@ -109,6 +114,15 @@ def check_and_download(data_dir: pathlib.Path) -> None:
 
 # From the git package, to be able to download the datasets, extract them and check the md5sum
 def md5_check(file, md5_exp: str) -> bool:
+    """Check the md5sum of a file.
+
+    Args:
+        file (str): The file to check.
+        md5_exp (str): The expected md5sum.
+
+    Returns:
+        bool: True if the md5sum is correct, False otherwise.
+    """
     with open(file, "rb") as f:
         md5_calc = hashlib.md5()
         chunk = f.read(8192)
@@ -122,9 +136,17 @@ def md5_check(file, md5_exp: str) -> bool:
     return False
 
 
-def download_dataset(dataset, directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+def download_dataset(dataset: dict[str, str], directory: pathlib.Path) -> None:
+    """Download a dataset from a link.
+
+    Args:
+        dataset (dict[str, str]): The dataset to download.
+        directory (pathlib.Path): The directory to save the dataset.
+    """
+
+    if not directory.exists():
+        # Create it
+        directory.mkdir(parents=True)
 
     filename = dataset["filename"] + "." + dataset["version"] + ".tar.gz"
     url = DATASET_URL + "/" + filename

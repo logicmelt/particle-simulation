@@ -5,31 +5,48 @@ from geant4_pybind import (
     G4ParticleTable,
     G4ParticleDefinition,
     G4ThreeVector,
+    G4Event,
 )
 
 # Units
 from geant4_pybind import GeV, km
+from typing import Any
 import logging
 
 
 class GPSGenerator(G4VUserPrimaryGeneratorAction):
-    def __init__(self, config: dict):
+    def __init__(self, config: dict[str, Any]) -> None:
+        """Initializes the GPS (General Particle Source) generator.
+
+        Args:
+            config (dict[str, Any]): The configuration dictionary.
+        """
         super().__init__()
-        self.config = config["generator"]
+        self.config: dict[str, Any] = config["generator"]
         self.particle_source = G4GeneralParticleSource()
         self.logger = logging.getLogger("main")
 
-    def GeneratePrimaries(self, event):
+    def GeneratePrimaries(self, arg0: G4Event) -> None:
+        """Generates the primary particles.
+
+        Args:
+            arg0 (G4Event): Instance that represents an event.
+        """
         self.logger.debug(
             f"Shooting a {self.particle_source.GetParticleDefinition().GetParticleName()}"
         )
-        self.particle_source.GeneratePrimaryVertex(event)
+        self.particle_source.GeneratePrimaryVertex(arg0)
 
 
 class ParticleGunGenerator(G4VUserPrimaryGeneratorAction):
-    def __init__(self, config: dict):
+    def __init__(self, config: dict[str, Any]) -> None:
+        """Initializes the Particle Gun generator.
+
+        Args:
+            config (dict[str, Any]): The configuration dictionary.
+        """
         super().__init__()
-        self.config = config["generator"]
+        self.config: dict[str, Any] = config["generator"]
         self.particle_gun = G4ParticleGun(self.config["parameters"]["n_events"])
         self.logger = logging.getLogger("main")
 
@@ -52,5 +69,10 @@ class ParticleGunGenerator(G4VUserPrimaryGeneratorAction):
         self.particle_gun.SetParticleEnergy(self.config["parameters"]["energy"] * GeV)
         self.logger.debug(f"Particle energy: {self.config['parameters']['energy']} GeV")
 
-    def GeneratePrimaries(self, event):
-        self.particle_gun.GeneratePrimaryVertex(event)
+    def GeneratePrimaries(self, arg0: G4Event) -> None:
+        """Generates the primary particles.
+
+        Args:
+            arg0 (G4Event): Instance that represents an event.
+        """
+        self.particle_gun.GeneratePrimaryVertex(arg0)

@@ -6,44 +6,47 @@ import logging
 import yaml
 import pathlib
 import os
+from typing import Any
 
-LOGGER_LEVEL = {
-    "DEBUG": logging.DEBUG,
-    "INFO": logging.INFO,
-    "WARNING": logging.WARNING,
-    "ERROR": logging.ERROR,
-    "CRITICAL": logging.CRITICAL,
+LOGGER_LEVEL: dict[str, int] = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+    "critical": logging.CRITICAL,
 }
 
 
-def load_config(config_file: str) -> dict:
+def load_config(config_file: str) -> dict[str, Any]:
     """Loads a configuration file in YAML format.
 
     Args:
         config_file (str): The path to the configuration file.
 
     Returns:
-        dict: The configuration file read as a dictionary.
+        dict[str, Any]: The configuration file read as a dictionary.
     """
     with open(config_file, "r") as f:
         config = yaml.safe_load(f)
     return config
 
 
-def create_logger(name: str, log_file: str, level: str = "INFO") -> logging.Logger:
+def create_logger(
+    name: str, log_file: str | pathlib.Path, level: str = "INFO"
+) -> logging.Logger:
     """
     Create a logger with the given name and log file.
 
     Args:
         name (str): The name of the logger.
-        log_file (str): The name of the log file.
-        level (str): The logging level.
+        log_file (str | pathlib.Path): Path to the log file.
+        level (str): The logging level ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]. Defaults to "INFO".
 
     Returns:
         logging.Logger: The logger instance.
     """
     # Get the logging level
-    level_log = LOGGER_LEVEL.get(level)
+    level_log = LOGGER_LEVEL[level.lower()]
     # Create the logger and set it to the desired level
     logger = logging.getLogger(name)
     logger.setLevel(level_log)
@@ -58,7 +61,7 @@ def create_logger(name: str, log_file: str, level: str = "INFO") -> logging.Logg
     return logger
 
 
-def get_mag_field(lat: float, lon: float, alt: float, date: str) -> tuple:
+def get_mag_field(lat: float, lon: float, alt: float, date: str) -> tuple[float, ...]:
     """
     Get the magnetic field at a given latitude, longitude and altitude
 
@@ -75,7 +78,7 @@ def get_mag_field(lat: float, lon: float, alt: float, date: str) -> tuple:
 
     Returns
     -------
-    tuple
+    tuple[float, ...]
         Tuple with the magnetic field components (x, y, z)
     """
     url = f"https://geomag.bgs.ac.uk/web_service/GMModels/igrf/13/?latitude={lat}&longitude={lon}&altitude={alt}&date={date}&format=json"
@@ -140,7 +143,10 @@ def create_mag_file(
     df = pd.DataFrame(data)
     df.to_csv(filename, index=False)
 
-def create_incremental_outdir(outdir: pathlib.Path, structure: str = "") -> pathlib.Path:
+
+def create_incremental_outdir(
+    outdir: pathlib.Path, structure: str = ""
+) -> pathlib.Path:
     """Creates a folder and increases the number by 1. Used to create folders for different runs.
 
     Args:
@@ -163,6 +169,7 @@ def create_incremental_outdir(outdir: pathlib.Path, structure: str = "") -> path
     create_outdir(outdir / f"{structure}{max(numbers)+1}")
     new_outdir = outdir / f"{structure}{max(numbers)+1}"
     return new_outdir
+
 
 def create_outdir(outdir: pathlib.Path):
     """Creates a folder if it doesn't exist

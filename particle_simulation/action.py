@@ -2,10 +2,12 @@ from geant4_pybind import (
     G4VUserActionInitialization,
     G4UserRunAction,
     G4Run,
+    G4Track,
     G4AnalysisManager,
     G4UserTrackingAction,
 )
 from particle_simulation.generator import GPSGenerator, ParticleGunGenerator
+from typing import Any
 import logging
 import pathlib
 
@@ -13,15 +15,25 @@ GENERATORS = {"gps": GPSGenerator, "particle_gun": ParticleGunGenerator}
 
 
 class ActionInitialization(G4VUserActionInitialization):
-    def __init__(self, config: dict, processNum: int):
+    def __init__(self, config: dict[str, Any], processNum: int) -> None:
+        """
+        Initializes an instance of the G4VUserActionInitialization class that allows to create the user actions.
+        Args:
+            config (dict[str, Any]): The configuration dictionary.
+            processNum (int): The process number. Used to create unique output files.
+        Returns:
+            None
+        """
+
         super().__init__()
         self.config = config
         # Create the generator
-        self.generator = self.config["generator"]["type"]
+        self.generator: str = self.config["generator"]["type"].lower()
         self.logger = logging.getLogger("main")
         self.processNum = processNum
 
-    def Build(self):
+    def Build(self) -> None:
+        """This function is called by the run manager to build the user actions."""
         # In this function we can create Run, Event and Tracking actions (e.g.: Saving data per track, event, etc.)
         gen = GENERATORS[self.generator](self.config)
         self.logger.info(f"Using the generator: {self.generator}")
@@ -34,7 +46,13 @@ class ActionInitialization(G4VUserActionInitialization):
 
 
 class RunAct(G4UserRunAction):
-    def __init__(self, config: dict, processNum: int):
+    def __init__(self, config: dict[str, Any], processNum: int) -> None:
+        """Initializes a run action that is called at the beginning and end of a run.
+
+        Args:
+            config (dict[str, Any]): The configuration dictionary.
+            processNum (int): The process number. Used to create unique output files.
+        """
         super().__init__()
         self.config = config
         self.logger = logging.getLogger("main")
@@ -67,17 +85,29 @@ class RunAct(G4UserRunAction):
         # ih = analysisManager.CreateH1("0", "energy spectrum dN/dE = f(E)", 1000, 400, 340000)
         # analysisManager.SetH1Activation(ih, False)
 
-    def BeginOfRunAction(self, run: G4Run):
+    def BeginOfRunAction(self, arg0: G4Run) -> None:
+        """This function is called at the beginning of a run.
+
+        Args:
+            arg0 (G4Run): A run object from Geant4.
+        """
         # Open an output file
         analysisManager = G4AnalysisManager.Instance()
-        idrun = run.GetRunID()
+        idrun = arg0.GetRunID()
         # Reset the analysis manager
-        output_file = str(self.save_dir / f"hits_run_{idrun}_proc_{self.processNum}.csv")
+        output_file = str(
+            self.save_dir / f"hits_run_{idrun}_proc_{self.processNum}.csv"
+        )
         analysisManager.OpenFile(output_file)
         self.logger.info(f"Creating the output file: {output_file}")
         analysisManager.FinishNtuple(0)
 
-    def EndOfRunAction(self, run: G4Run):
+    def EndOfRunAction(self, arg0: G4Run) -> None:
+        """This function is called at the end of a run.
+
+        Args:
+            arg0 (G4Run): A run object from Geant4.
+        """
         # Save the data
         analysisManager = G4AnalysisManager.Instance()
         # Write the data
@@ -88,14 +118,24 @@ class RunAct(G4UserRunAction):
 
 
 class TrackingAction(G4UserTrackingAction):
-    def __init__(self, config: dict):
+    def __init__(self, config: dict[str, Any]) -> None:
+        """Initializes a tracking action that allows to interact with the information of the tracked particle.
+
+        Args:
+            config (dict[str, Any]): The configuration dictionary.
+        """
         super().__init__()
         self.config = config
         self.logger = logging.getLogger("main")
 
-    def PreUserTrackingAction(self, track):
+    def PreUserTrackingAction(self, arg0: G4Track) -> None:
+        """This function is called before the tracking of a particle and stores the kinetic energy of the particle.
+
+        Args:
+            arg0 (G4Track): A track object from Geant4.
+        """
         # Get the analysis manager
         analysisManager = G4AnalysisManager.Instance()
         # Fill the data
-        kinetic_energy = track.GetKineticEnergy()
+        kinetic_energy = arg0.GetKineticEnergy()
         analysisManager.FillH1(0, kinetic_energy)

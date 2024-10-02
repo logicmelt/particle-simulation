@@ -13,10 +13,11 @@ from particle_simulation.utils import (
     load_config,
     create_incremental_outdir,
 )
+from typing import Any
 import argparse, multiprocessing, datetime, pathlib, itertools
 
 
-def main(config: dict, processNum: int = 1):
+def main(config: dict[str, Any], processNum: int = 1):
     save_dir = pathlib.Path(config["save_dir"])
     # Create a logger
     logger = create_logger(
@@ -27,12 +28,12 @@ def main(config: dict, processNum: int = 1):
     logger.info(f"Running process: {processNum}/{config.get('n_processes', 1)}")
 
     # Set the random seed
-    random_seed = config.get("random_seed", datetime.datetime.now().timestamp())
+    random_seed: float = config.get("random_seed", datetime.datetime.now().timestamp())
     G4Random.getTheEngine().setSeed(int(processNum + random_seed), 0)
     logger.info(f"Random seed: {int(processNum + random_seed)}")
 
     # Macro files
-    macro_files = config["macro_files"]
+    macro_files: list[str] | str = config["macro_files"]
 
     # Create an instance of the run manager
     runManager = G4RunManagerFactory.CreateRunManager(G4RunManagerType.Serial)
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     config["save_dir"] = save_dir
 
     # Get the number of processes
-    n_processes = config.get("n_processes", 1)
+    n_processes: int = config.get("n_processes", 1)
     if n_processes == 1:
         main(config, n_processes)
     else:
