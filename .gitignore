@@ -1,5 +1,6 @@
 test_data/
 geant4_datasets/
+.vscode/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
