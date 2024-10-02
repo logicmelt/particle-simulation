@@ -1,0 +1,45 @@
+save_dir: "test_data/" # Directory where the output files will be saved
+random_seed: 42 # Seed for the random number generator
+n_processes: 5 # Number of processes to be used in the simulation
+macro_files: ["additional_files/macro_files/gps_flat.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
+logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
+
+# Particle generator
+generator:
+  type: "gps" # "gps" or "particle_gun". GPS parameters are given through a macro file
+  parameters: # Parameters for the particle gun (Initial values that can be changed in the macro file)
+    n_events: 1 # Number of events to be generated per run
+    energy: 300 # Energy of the primary particle in GeV
+    particle: "geantino" # Particle type
+    position: [0, 0, 6441] # Initial position of the primary particle in km
+                           # Remember that this position is with respect the center of the geometry, e.g. for a flat geometry it would be the box's center
+    direction: [0, 0, -1] # Direction of the momentum of the primary particle
+  
+# Detector
+constructor:
+  input: custom # "gdml" or "custom". If custom is chosen additional parameters are required.
+  gdml_file: "test_data/geometry_flat.gdml" # Path to the GDML file
+  mag_file: "additional_files/data_files/mag_field_vigo.csv" # Path to the magnetic field file or "None" if no magnetic field is used
+                                                  # Units should be in nT
+
+  sensitive_detectors:
+    enabled: True # Enable the sensitive detectors
+    altitude: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] # Altitude of the sensitive detectors in km
+    particles: ["mu-", "chargedgeantino", "geantino"] # List of particles that will be recorded in the sensitive detectors. 
+                                                                      #"all" for all particles.
+
+  # Parameters used to generate the custom geometry
+  custom:
+    export_gdml: False # Export the detector to a GDML file. Don't use this option if you are using multiprocessing
+    geometry: "flat" # "curved" or "flat". Geometry of the detector
+    # If the geometry is curved then we need to define the Earth's radius
+    earth_radius: 6371 #6371 # Earth's radius in km
+    # In both cases we have to define the size of the atmosphere
+    atmos_size: 100 # Atmosphere size in km. It will be the arc lenght at the surface of the Earth for the curved geometry and 
+                    # the square side for the flat geometry
+    atmos_height: 70 # Atmosphere height in km
+    atmos_comp: ["N", 70, "O", 27, "Ar", 3] # Material of the atmosphere
+    atmos_density: "from_file" # "from_file" or "auto".
+    atmos_from_file: "additional_files/data_files/density_temp_height.csv" # Path to the CSV file with the density profile
+    atmos_n_points: 100 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
+    
