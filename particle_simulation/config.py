@@ -26,11 +26,11 @@ class GeneratorConfig(BaseSettings):
         description="Type of primary particle to shoot in the particle gun generator",
     )
     position: tuple[float, float, float] = Field(
-        default=(0.0, 0.0, 0.0),
+        default=(0.0, 0.0, 0.0), min_length=3, max_length=3,
         description="Position of the primary particle in km (Particle gun generator). Distance with respect the center of the geometry",
     )
     direction: tuple[float, float, float] = Field(
-        default=(0.0, 0.0, 1.0),
+        default=(0.0, 0.0, 1.0), min_length=3, max_length=3,
         description="Direction of the momentum of the primary particle (Particle gun generator)",
     )
 
@@ -120,14 +120,14 @@ class ConstructorConfig(BaseSettings):
     atmos_size: float = Field(
         default=100,
         gt=0,
-        description="Size of the atmosphere in km (Radius if curved geometry)",
+        description="Size of the atmosphere in km (arc lenght if curved geometry)",
     )
     atmos_height: float = Field(
         default=70, gt=0, description="Height of the atmosphere in km"
     )
     atmos_comp: tuple[str | float, ...] = Field(
         default=("N", 70, "O", 27, "Ar", 3),
-        min_length=1,
+        min_length=2,
         description="Composition of the atmosphere in %",
     )
     atmos_n_points: int = Field(
@@ -181,7 +181,7 @@ class Config(BaseSettings):
                 assert pathlib.Path(
                     macro_file
                 ).is_file(), f"Macro file {macro_file} not found"
-        assert self.logger_level.upper() in [
+        assert self.logger_level in [
             "DEBUG",
             "INFO",
             "WARNING",
