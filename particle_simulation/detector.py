@@ -6,24 +6,25 @@ from geant4_pybind import (
     G4RunManager,
 )
 from typing import Any
+from particle_simulation.config import ConstructorConfig
 import logging
 
 
 class SensDetector(G4VSensitiveDetector):
     def __init__(
-        self, config: dict[str, Any], name: str, correction_factor: float = 0.0
+        self, config_file: ConstructorConfig, name: str, correction_factor: float = 0.0
     ) -> None:
         """Initializes a sensitive detector that will be used to save data from the simulation.
 
         Args:
-            config (dict[str, Any]): The configuration dictionary.
+            config_file (ConstructorConfig): Configuration settings for the constructor.
             name (str): Name of the sensitive detector.
             correction_factor (float, optional): Correction factor to the z-axis of the particles due to the geometry. Defaults to 0.0.
         """
         super().__init__(name)
-        self.config = config
+        self.config = config_file
         self.accepted_particles: set[str] = set(
-            self.config["sensitive_detectors"]["particles"]
+            self.config.sensitive_detectors.particles
         )
         # Correction factor to the z-axis of the particles due to the geometry.
         self.correction_factor = correction_factor

@@ -25,6 +25,8 @@ from typing import Any
 
 # Import units
 from geant4_pybind import kelvin, kg, m3, perCent, radian, km, mm, tesla
+
+from particle_simulation.config import Config
 import pandas as pd
 import numpy as np
 import pathlib
@@ -91,15 +93,15 @@ class UniformMagneticField(G4MagneticField):
 
 
 class DetectorConstruction(G4VUserDetectorConstruction):
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(self, config_pyd: Config) -> None:
         """Constructs the geometry of the detector from the configuration file.
 
         Args:
             config (dict[str, Any]): The configuration file with the parameters of the detector.
         """
         super().__init__()
-        self.config: dict[str, Any] = config["constructor"]
-        self.save_dir: str = config["save_dir"]
+        self.config = config_pyd.constructor
+        self.save_dir: str = config_pyd.save_dir
         self.logic_volume: np.ndarray = np.array([])
         self.sensitive_detector: np.ndarray = np.array([])
         self.correction_factor: float = (
@@ -112,29 +114,27 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         self.logger.info("Creating the detector construction")
 
         # Magnetic field
-        self.mag_field = self.parse_magnetic_field(self.config["mag_file"])
+        self.mag_field = self.parse_magnetic_field(self.config.mag_file)
 
         # GDML parser
         self.gdml_parser = G4GDMLParser()
 
-        if self.config["input"] == "gdml":
-            self.gdml_file: str = self.config["gdml_file"]
+        if self.config.input_geom == "gdml":
+            self.gdml_file = self.config.gdml_file
             self.density_points: int = 0
         else:
             # Get some parameters as attributes
-            self.density_points = self.config["custom"]["atmos_n_points"]
-            self.atmosphere_height: float = (
-                self.config["custom"]["atmos_height"] * km
+            self.density_points = self.config.atmos_n_points
+            self.atmosphere_height = (
+                self.config.atmos_height * km
             )  # Height of the atmosphere
-            self.size: float = (
-                self.config["custom"]["atmos_size"] * km
+            self.size = (
+                self.config.atmos_size * km
             )  # Size of the world volume. Arc lenght for the sphere, side for the box
-            self.shape: str = self.config["custom"][
-                "geometry"
-            ]  # Shape of the world volume
+            self.shape = self.config.geometry  # Shape of the world volume
 
             # Export the geometry to a GDML file
-            self.export_gdml: bool = self.config["custom"].get("export_gdml", False)
+            self.export_gdml = self.config.export_gdml
 
             # Define the density, temperature and materials
             self.density, self.temp, _ = self.parse_density_temp_from_config()
@@ -150,7 +150,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             G4VPhysicalVolume: The world volume of the detector.
         """
         # Construct the geometry
-        if self.config["input"] == "gdml":
+        if self.config.input_geom == "gdml":
             # Load the geometry from a GDML file
             self.gdml_parser.Read(self.gdml_file)
             # The number of layers is the number of daughters of the world volume
@@ -318,9 +318,9 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             )
 
         # Construct the sensitive detectors if any
-        if self.config["sensitive_detectors"].get("enabled", False):
+        if self.config.sensitive_detectors.enabled:
             detectors_alt = (
-                np.array(self.config["sensitive_detectors"]["altitude"]) * km
+                np.array(self.config.sensitive_detectors.altitude) * km
                 + self.correction_factor
             )
             n_detectors = len(detectors_alt)
@@ -402,7 +402,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             tuple[G4VPhysicalVolume, np.ndarray]: The world volume and the logical volumes of the layers.
         """
         # Earth radius
-        earth_rad: float = self.config["custom"]["earth_radius"] * km
+        earth_rad: float = self.config.earth_radius * km
         # Get the angle to create the spherical sector
         angle_sph: float = self.size / earth_rad * radian
 
@@ -472,9 +472,9 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             )
 
         # Construct the sensitive detectors if any
-        if self.config["sensitive_detectors"].get("enabled", False):
+        if self.config.sensitive_detectors.enabled:
             detectors_alt = (
-                np.array(self.config["sensitive_detectors"]["altitude"]) * km
+                np.array(self.config.sensitive_detectors.altitude) * km
                 + self.correction_factor
             )
             n_detectors = len(detectors_alt)
@@ -556,13 +556,13 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         # The world material is air
         world_material = nist_manager.FindOrBuildMaterial("G4_AIR")
 
-        comp = self.config["custom"]["atmos_comp"]
+        comp = self.config.atmos_comp
         # Get the material from the Nist manager
         elem = np.zeros((len(comp) // 2, 2), dtype=object)
         for i in range(0, len(comp), 2):
             elem[i // 2] = [
-                nist_manager.FindOrBuildElement(comp[i]),
-                comp[i + 1] * perCent,
+                nist_manager.FindOrBuildElement(str(comp[i])),
+                float(comp[i + 1]) * perCent,
             ]
 
         # Create the material
@@ -593,27 +593,17 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             tuple[np.ndarray, np.ndarray, np.ndarray]: The density, temperature and height of the atmosphere layers interpolated from the file.
         """
 
-        # Parse the density and temperature from the config file
-        if self.config["custom"]["atmos_density"] == "from_file":
-            # Read the density and temperature profile from a file
-            file_path = self.config["custom"]["atmos_from_file"]
-            df = pd.read_csv(file_path)
-            # Get the height, temperature and density
-            height = np.array(df["Height/km"]) * km
-            temp = np.array(df["T/K"])
-            density = np.array(df["rho/(kg/m3)"])
+        # Read the density and temperature profile from a file
+        file_path = self.config.density_profile
+        df = pd.read_csv(file_path)
+        # Get the height, temperature and density
+        height = np.array(df["Height/km"]) * km
+        temp = np.array(df["T/K"])
+        density = np.array(df["rho/(kg/m3)"])
 
-            # Interpolate the density and temperature to the height of the atmosphere
-            inter_height = np.linspace(0, self.atmosphere_height, self.density_points)
-            density = np.interp(inter_height, height, density)
-            temp = np.interp(inter_height, height, temp)
+        # Interpolate the density and temperature to the height of the atmosphere
+        inter_height = np.linspace(0, self.atmosphere_height, self.density_points)
+        density = np.interp(inter_height, height, density)
+        temp = np.interp(inter_height, height, temp)
 
-            return density, temp, inter_height
-
-        else:
-            self.logger.error(
-                "Only 'from_file' is supported for 'atmos_density' in the config file."
-            )
-            raise NotImplementedError(
-                "Only 'from_file' is supported for 'atmos_density' in the config file."
-            )
+        return density, temp, inter_height

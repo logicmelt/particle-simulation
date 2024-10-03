@@ -6,6 +6,7 @@ import logging
 import yaml
 import pathlib
 import os
+import re
 from typing import Any
 
 LOGGER_LEVEL: dict[str, int] = {
@@ -157,7 +158,8 @@ def create_incremental_outdir(
         new_outdir (pathlib.Path): New output dir
     """
     create_outdir(outdir)
-    folders = os.listdir(outdir)
+    # Get all folders that match the structure string
+    folders = [f for f in os.listdir(outdir) if re.match(rf"{structure}\d+", f)]
     if len(folders) == 0:
         create_outdir(outdir / f"{structure}1")
         new_outdir = outdir / f"{structure}1"
