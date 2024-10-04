@@ -41,4 +41,4 @@ python particle_simulation --random_seed 42 --constructor.sensitive_detectors.en
 ```bash
 python particle_simulation --config_file additional_files/simulation_config.yaml --random_seed 648 --constructor.sensitive_detectors.enabled False
 ```
-Inside the save directory the log and results (as .csv) will be stored alongisde the configuration file as json. 
+Within the save directory the log and results (as .csv) will be stored alongisde the configuration file as json. 
