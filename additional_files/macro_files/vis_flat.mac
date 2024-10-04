@@ -24,8 +24,4 @@
 /run/initialize
 /run/dumpCouples
 
-# Run the beam
-/run/beamOn 100
-
-/vis/viewer/refresh
 

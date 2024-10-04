@@ -97,6 +97,11 @@ class SimRunner:
             for macro in macro_files:
                 logger.info(f"Applying the commands in the macro file: {macro}")
                 uiManager.ApplyCommand(f"/control/execute {macro}")
+        # Shoot the particles
+        logger.info(f"Shooting {self.config.particles_per_run} particles")
+        uiManager.ApplyCommand(f"/run/beamOn {self.config.particles_per_run}")
+        uiManager.ApplyCommand("/vis/viewer/refresh")
+
         logger.info("Finished running the macro files")
 
         return 0

@@ -3,12 +3,13 @@ random_seed: 42 # Seed for the random number generator
 num_processes: 5 # Number of processes to be used in the simulation
 macro_files: ["additional_files/macro_files/gps_flat.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
+particles_per_run: 100 # Number of particles to be generated per run
 
 # Particle generator
 generator:
   gen_type: "gps" # "gps" or "particle_gun". GPS parameters are given through a macro file
   # Parameters for the particle gun (Initial values that can be changed in the macro file)
-  n_events: 1 # Number of events to be generated per run
+  n_events: 1 # Number of particles to be shoot at one invokation of GeneratePrimaryVertex() method for a particle gun (Same physical quantities)
   energy: 300 # Energy of the primary particle in GeV
   particle: "geantino" # Particle type
   position: [0, 0, 6441] # Initial position of the primary particle in km
@@ -40,6 +41,8 @@ constructor:
   atmos_comp: ["N", 70, "O", 27, "Ar", 3] # Material of the atmosphere
   # atmos_density: "from_file" # "from_file" or "auto".
   atmos_n_points: 100 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
-  density_profile: "additional_files/data_files/density_temp_height.csv" # Path to the CSV file with the density profile
+  density_profile: 
+    density_file: "additional_files/data_files/density_temp_height.csv" # Path to the json file with the density profiles.
+    day_idx: 0. # Index of the day in the density file
 
   

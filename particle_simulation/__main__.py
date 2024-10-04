@@ -33,5 +33,6 @@ if __name__ == "__main__":
     else:
         # Load the configuration file and overwrite the default values
         config_parser = Config(**load_config(args.config_file))
+
     # Call the main function
     main(config_parser)

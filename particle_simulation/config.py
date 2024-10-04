@@ -14,7 +14,10 @@ class GeneratorConfig(BaseSettings):
     n_events: int = Field(
         default=1,
         gt=0,
-        description="Number of events to be generated per run using the particle gun generator",
+        description=(
+            "Number of particles to be shoot at one invokation of GeneratePrimaryVertex()"
+            "method for a particle gun (Same physical quantities)"
+        ),
     )
     energy: float = Field(
         default=100.0,
@@ -26,11 +29,18 @@ class GeneratorConfig(BaseSettings):
         description="Type of primary particle to shoot in the particle gun generator",
     )
     position: tuple[float, float, float] = Field(
-        default=(0.0, 0.0, 0.0), min_length=3, max_length=3,
-        description="Position of the primary particle in km (Particle gun generator). Distance with respect the center of the geometry",
+        default=(0.0, 0.0, 0.0),
+        min_length=3,
+        max_length=3,
+        description=(
+            "Position of the primary particle in km (Particle gun generator)."
+            "Distance with respect the center of the geometry"
+        ),
     )
     direction: tuple[float, float, float] = Field(
-        default=(0.0, 0.0, 1.0), min_length=3, max_length=3,
+        default=(0.0, 0.0, 1.0),
+        min_length=3,
+        max_length=3,
         description="Direction of the momentum of the primary particle (Particle gun generator)",
     )
 
@@ -94,6 +104,17 @@ class SensitiveDetectorConfig(BaseSettings):
         return self
 
 
+class DensityProfileConfig(BaseSettings):
+    """Configuration settings for the density profile."""
+
+    density_file: str = Field(
+        default="", description="Path to the json file with the density profiles."
+    )
+    day_idx: int = Field(
+        default=0, gt=-1, description="Index of the day in the density file"
+    )
+
+
 class ConstructorConfig(BaseSettings):
     """Configuration settings for the geometry constructor."""
 
@@ -103,7 +124,10 @@ class ConstructorConfig(BaseSettings):
     gdml_file: str = Field(default="", description="GDML file to be used")
     mag_file: str = Field(
         default="",
-        description="File containing the magnetic field as a csv with 7 columns: Bx, By, Bz, altitude, latitude, longitude and date",
+        description=(
+            "File containing the magnetic field as a csv with 7 columns:"
+            "Bx, By, Bz, altitude, latitude, longitude and date"
+        ),
     )
     sensitive_detectors: SensitiveDetectorConfig = Field(
         default=SensitiveDetectorConfig()
@@ -134,10 +158,7 @@ class ConstructorConfig(BaseSettings):
         default=100, gt=0, description="Number of points in the density profile"
     )
 
-    density_profile: str = Field(
-        default="",
-        description="File containing the density/temperature profile at different altitudes",
-    )
+    density_profile: DensityProfileConfig = DensityProfileConfig()
 
     @model_validator(mode="after")
     def validate_data(self) -> "ConstructorConfig":
@@ -163,6 +184,9 @@ class Config(BaseSettings):
     )
     logger_level: Annotated[str, StringConstraints(to_upper=True)] = Field(
         default="INFO", description="Logger level"
+    )
+    particles_per_run: int = Field(
+        default=1, gt=0, description="Number of particles to be generated per run"
     )
     generator: GeneratorConfig = GeneratorConfig()
     constructor: ConstructorConfig = ConstructorConfig()
@@ -196,8 +220,11 @@ class Config(BaseSettings):
             self.constructor.mag_file
         ).is_file(), f"Magnetic field file {self.constructor.mag_file} not found"
         assert pathlib.Path(
-            self.constructor.density_profile
+            self.constructor.density_profile.density_file
         ).is_file(), (
             f"Density profile file {self.constructor.density_profile} not found"
         )
+        assert pathlib.Path(self.constructor.density_profile.density_file).suffix in [
+            ".json"
+        ], f"Invalid density profile file extension"
         return self

@@ -30,7 +30,7 @@ from particle_simulation.config import Config
 import pandas as pd
 import numpy as np
 import pathlib
-
+import json
 # Sensitive detector
 import particle_simulation.detector
 
@@ -593,14 +593,15 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             tuple[np.ndarray, np.ndarray, np.ndarray]: The density, temperature and height of the atmosphere layers interpolated from the file.
         """
 
-        # Read the density and temperature profile from a file
-        file_path = self.config.density_profile
-        df = pd.read_csv(file_path)
+        # Read the density and temperature profile from the json file
+        with open(self.config.density_profile.density_file, "r") as f:
+            data = json.load(f)
+        # Choose the day to be used from the configuration
+        data_day = data[str(self.config.density_profile.day_idx)]
         # Get the height, temperature and density
-        height = np.array(df["Height/km"]) * km
-        temp = np.array(df["T/K"])
-        density = np.array(df["rho/(kg/m3)"])
-
+        height = np.array(data_day["altitude"]) * km
+        temp = np.array(data_day["T"])
+        density = np.array(data_day["density"])
         # Interpolate the density and temperature to the height of the atmosphere
         inter_height = np.linspace(0, self.atmosphere_height, self.density_points)
         density = np.interp(inter_height, height, density)
