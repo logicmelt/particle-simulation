@@ -42,7 +42,7 @@ constructor:
   # atmos_density: "from_file" # "from_file" or "auto".
   atmos_n_points: 100 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
   density_profile: 
-    density_file: "additional_files/data_files/density_temp_height.csv" # Path to the json file with the density profiles.
-    day_idx: 0. # Index of the day in the density file
+    density_file: "additional_files/data_files/density_temp_height.json" # Path to the json file with the density profiles.
+    day_idx: 0 # Index of the day in the density file
 
   
