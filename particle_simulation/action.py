@@ -1,10 +1,15 @@
 from geant4_pybind import (
+    G4ClassificationOfNewTrack,
     G4VUserActionInitialization,
     G4UserRunAction,
     G4Run,
     G4Track,
     G4AnalysisManager,
     G4UserTrackingAction,
+    G4UserStackingAction,
+    G4ClassificationOfNewTrack,
+    G4Electron,
+    G4Positron, 
 )
 from particle_simulation.generator import GPSGenerator, ParticleGunGenerator
 from particle_simulation.config import Config
@@ -45,7 +50,25 @@ class ActionInitialization(G4VUserActionInitialization):
         self.SetUserAction(RunAct(self.config, self.processNum))
         # Set the user tracking action
         # self.SetUserAction(TrackingAction(self.config))
+        # Set the user stacking action (This is used to kill particles not needed for the sim: electrons and positrons)
+        self.SetUserAction(StackingAction())
 
+class StackingAction(G4UserStackingAction):
+    def ClassifyNewTrack(self, aTrack: G4Track) -> G4ClassificationOfNewTrack:
+        """This function is called for every new track in the stack.
+
+        Args:
+            aTrack (G4Track): A track object from Geant4.
+
+        Returns:
+            G4ClassificationOfNewTrack: The classification of the new track.
+        """
+        # Kill positrons and electrons. They are not interesting for us as they cant generate muons
+        if aTrack.GetDefinition() == G4Electron.Electron():
+            return G4ClassificationOfNewTrack.fKill
+        if aTrack.GetDefinition() == G4Positron.Positron():
+            return G4ClassificationOfNewTrack.fKill
+        return G4ClassificationOfNewTrack.fUrgent
 
 class RunAct(G4UserRunAction):
     def __init__(self, config_pyd: Config, processNum: int) -> None:
