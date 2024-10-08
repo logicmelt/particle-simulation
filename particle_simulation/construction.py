@@ -43,7 +43,6 @@ import logging
 # TODO: Reading from GDML files is a pain in the back. If the GDML file is generated using this package we are ok,
 # otherwise we need to check the order and altitude so that we can associate the correct value of the magnetic field.
 # TODO: Several sensitive detectors might be problematic if all of them have to write files. Too much i/o
-# TODO: We are using only ONE day from the dataset for the density and temperature
 # TODO: Add different interpolation methods for the density and temperature
 
 
