@@ -26,11 +26,12 @@ from typing import Any
 # Import units
 from geant4_pybind import kelvin, kg, m3, perCent, radian, km, mm, tesla
 
-from particle_simulation.config import Config
+from particle_simulation.config import Config, MagneticFieldConfig
 import pandas as pd
 import numpy as np
 import pathlib
 import json
+
 # Sensitive detector
 import particle_simulation.detector
 
@@ -114,7 +115,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         self.logger.info("Creating the detector construction")
 
         # Magnetic field
-        self.mag_field = self.parse_magnetic_field(self.config.mag_file)
+        self.mag_field = self.parse_magnetic_field(self.config.magnetic_field)
 
         # GDML parser
         self.gdml_parser = G4GDMLParser()
@@ -227,22 +228,25 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                 sdManager.AddNewDetector(sensitive_det)
                 self.sensitive_detector[i].SetSensitiveDetector(sensitive_det)
 
-    def parse_magnetic_field(self, mag_file: str) -> np.ndarray | None:
-        """Parse the magnetic field from a file.
+    def parse_magnetic_field(
+        self, mag_config: MagneticFieldConfig
+    ) -> np.ndarray | None:
+        """Parse the magnetic field from a file or estimate it from position.
 
         Args:
-            mag_file (str): The path to the file with the magnetic field.
+            mag_file (MagneticFieldConfig): Magnetic field configuration with a path to a file in csv format or the position in
+                latitude-longitude coordinates (geodetic coordinates) and the date.
 
         Returns:
             np.ndarray: The magnetic field in cartesian coordinates and altitude. None if no file is provided.
         """
         # Parse the magnetic field from a file
-        if mag_file == "None":
+        if mag_config.mag_source != "file":
             self.logger.info("No magnetic field file provided")
             return
         else:
-            self.logger.info(f"Reading the magnetic field from {mag_file}")
-            open_csv = pd.read_csv(mag_file)
+            self.logger.info(f"Reading the magnetic field from {mag_config.mag_file}")
+            open_csv = pd.read_csv(mag_config.mag_file)
             # Transforms the values from nT to Tesla
             open_csv[["x", "y", "z"]] = open_csv[["x", "y", "z"]] * 1e-9
             # And the km column using the geant4 System of units

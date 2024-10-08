@@ -1,8 +1,9 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, model_validator, StringConstraints
+from pydantic import Field, model_validator, StringConstraints, computed_field
 from typing import Annotated
 import pathlib
 import time
+import datetime
 
 
 class GeneratorConfig(BaseSettings):
@@ -115,13 +116,13 @@ class DensityProfileConfig(BaseSettings):
     )
 
 
-class ConstructorConfig(BaseSettings):
-    """Configuration settings for the geometry constructor."""
+class MagneticFieldConfig(BaseSettings):
+    """Configuration settings for the magnetic field."""
 
-    input_geom: Annotated[str, StringConstraints(to_lower=True)] = Field(
-        default="custom", description="gdml or custom"
+    mag_source: Annotated[str, StringConstraints(to_lower=True)] = Field(
+        default="file",
+        description="Source of the magnetic field: file or estimated from latitude, longitude and date.",
     )
-    gdml_file: str = Field(default="", description="GDML file to be used")
     mag_file: str = Field(
         default="",
         description=(
@@ -129,6 +130,56 @@ class ConstructorConfig(BaseSettings):
             "Bx, By, Bz, altitude, latitude, longitude and date"
         ),
     )
+    latitude: float = Field(
+        default=42.224,
+        le=90,
+        ge=-90,
+        description="Latitude of the detector in decimal degrees (World Geodetic System 1984)."
+        "Positive north equator (default: 42.224).",
+    )
+    longitude: float = Field(
+        default=-8.716,
+        le=90,
+        ge=-90,
+        description="Longitude of the detector in decimal degrees (World Geodetic System 1984)."
+        "Positive east of the prime meridian (default: -8.716).",
+    )
+    mag_time: datetime.date = Field(
+        default=datetime.date(2021, 1, 1),
+        description="Date to get the magnetic field values. Format YYYY-MM-DD.",
+    )
+
+    @computed_field
+    @property
+    def decimal_year(self) -> float:
+        """Return the decimal year from a date in format YYYY-MM-DD."""
+        return self.transform_to_decimal_year(self.mag_time)
+
+    def transform_to_decimal_year(self, date: datetime.date) -> float:
+        """Return the decimal year from a date in format YYYY-MM-DD.
+
+        Args:
+            date (datetime.date): Date in format YYYY-MM-DD
+
+        Returns:
+            float: Decimal year
+        """
+        # Start of the year
+        start = datetime.date(date.year, 1, 1).toordinal()
+        # Length of the year
+        year_length = datetime.date(date.year + 1, 1, 1).toordinal() - start
+        # Return the decimal year
+        return date.year + float(date.toordinal() - start) / year_length
+
+
+class ConstructorConfig(BaseSettings):
+    """Configuration settings for the geometry constructor."""
+
+    input_geom: Annotated[str, StringConstraints(to_lower=True)] = Field(
+        default="custom", description="gdml or custom"
+    )
+    gdml_file: str = Field(default="", description="GDML file to be used")
+    magnetic_field: MagneticFieldConfig = MagneticFieldConfig()
     sensitive_detectors: SensitiveDetectorConfig = Field(
         default=SensitiveDetectorConfig()
     )
@@ -216,14 +267,18 @@ class Config(BaseSettings):
             assert pathlib.Path(
                 self.constructor.gdml_file
             ).is_file(), f"GDML File {self.constructor.gdml_file} not found"
-        assert pathlib.Path(
-            self.constructor.mag_file
-        ).is_file(), f"Magnetic field file {self.constructor.mag_file} not found"
+
+        if self.constructor.magnetic_field.mag_source == "file":
+            assert pathlib.Path(
+                self.constructor.magnetic_field.mag_file
+            ).is_file(), f"Magnetic field file {self.constructor.magnetic_field.mag_file} not found"
+
         assert pathlib.Path(
             self.constructor.density_profile.density_file
         ).is_file(), (
             f"Density profile file {self.constructor.density_profile} not found"
         )
+
         assert pathlib.Path(self.constructor.density_profile.density_file).suffix in [
             ".json"
         ], f"Invalid density profile file extension"

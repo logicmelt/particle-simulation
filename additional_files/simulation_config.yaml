@@ -20,9 +20,15 @@ generator:
 constructor:
   input_geom: custom # "gdml" or "custom". If custom is chosen additional parameters are required.
   gdml_file: "test_data/geometry_flat.gdml" # Path to the GDML file
-  mag_file: "additional_files/data_files/mag_field_vigo.csv" # Path to the magnetic field file or "None" if no magnetic field is used
-                                                  # Units should be in nT
 
+  magnetic_field: # Parameters for the magnetic field 
+    mag_source: "file"
+    mag_file: "additional_files/data_files/mag_field_vigo.csv" # Path to the magnetic field file or "None" if no magnetic field is used
+                                                  # Units should be in nT
+    latitude: 42.2 # Latitude of the detector in degrees
+    longitude: -8.7 # Longitude of the detector in degrees
+    mag_time: "2019-07-01" # Date of the magnetic field in YYYY-MM-DD format.
+                            
   sensitive_detectors:
     enabled: True # Enable the sensitive detectors
     altitude: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] # Altitude of the sensitive detectors in km
