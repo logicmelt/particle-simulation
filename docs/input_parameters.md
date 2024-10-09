@@ -1,4 +1,8 @@
-Parameters can be introduced as command line arguments or through a configuration file in JSON/YAML format. All available parameters are:
+Parameters can be introduced as command line arguments or through a configuration file in JSON/YAML format ([additional_files/simulation_config.yaml](https://github.com/logicmelt/particle-simulation/blob/feature/input_parser/additional_files/simulation_config.yaml) for an example). 
+
+Only three parameters are required to run a simulation: save_dir, macro_files and density_file. 
+
+All available parameters are:
 
 - save_dir (str, **Required**): Directory to save the output files.
 - random_seed (int, Optional): Random seed for reproducibility. If not provided, it will be set to the current time.
