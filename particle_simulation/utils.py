@@ -6,19 +6,20 @@ import logging
 import yaml
 import pathlib
 import os
+import re
 from typing import Any
 
 LOGGER_LEVEL: dict[str, int] = {
-    "debug": logging.DEBUG,
-    "info": logging.INFO,
-    "warning": logging.WARNING,
-    "error": logging.ERROR,
-    "critical": logging.CRITICAL,
+    "DEBUG": logging.DEBUG,
+    "INFO": logging.INFO,
+    "WARNING": logging.WARNING,
+    "ERROR": logging.ERROR,
+    "CRITICAL": logging.CRITICAL,
 }
 
 
 def load_config(config_file: str) -> dict[str, Any]:
-    """Loads a configuration file in YAML format.
+    """Loads a configuration file in YAML or JSON format.
 
     Args:
         config_file (str): The path to the configuration file.
@@ -26,8 +27,15 @@ def load_config(config_file: str) -> dict[str, Any]:
     Returns:
         dict[str, Any]: The configuration file read as a dictionary.
     """
-    with open(config_file, "r") as f:
-        config = yaml.safe_load(f)
+    file_extension = pathlib.Path(config_file).suffix
+    if file_extension == ".json":
+        with open(config_file, "r") as f:
+            config = json.load(f)
+    elif file_extension == ".yaml":
+        with open(config_file, "r") as f:
+            config = yaml.safe_load(f)
+    else:
+        raise ValueError("The configuration file must be in JSON or YAML format.")
     return config
 
 
@@ -46,7 +54,7 @@ def create_logger(
         logging.Logger: The logger instance.
     """
     # Get the logging level
-    level_log = LOGGER_LEVEL[level.lower()]
+    level_log = LOGGER_LEVEL[level]
     # Create the logger and set it to the desired level
     logger = logging.getLogger(name)
     logger.setLevel(level_log)
@@ -157,7 +165,8 @@ def create_incremental_outdir(
         new_outdir (pathlib.Path): New output dir
     """
     create_outdir(outdir)
-    folders = os.listdir(outdir)
+    # Get all folders that match the structure string
+    folders = [f for f in os.listdir(outdir) if re.match(rf"{structure}\d+", f)]
     if len(folders) == 0:
         create_outdir(outdir / f"{structure}1")
         new_outdir = outdir / f"{structure}1"

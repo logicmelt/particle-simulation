@@ -11,18 +11,19 @@ from geant4_pybind import (
 # Units
 from geant4_pybind import GeV, km
 from typing import Any
+from particle_simulation.config import GeneratorConfig
 import logging
 
 
 class GPSGenerator(G4VUserPrimaryGeneratorAction):
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(self, config_gen: GeneratorConfig) -> None:
         """Initializes the GPS (General Particle Source) generator.
 
         Args:
-            config (dict[str, Any]): The configuration dictionary.
+            config_gen (GeneratorConfig): Generator configuration parameters.
         """
         super().__init__()
-        self.config: dict[str, Any] = config["generator"]
+        self.config = config_gen
         self.particle_source = G4GeneralParticleSource()
         self.logger = logging.getLogger("main")
 
@@ -39,26 +40,26 @@ class GPSGenerator(G4VUserPrimaryGeneratorAction):
 
 
 class ParticleGunGenerator(G4VUserPrimaryGeneratorAction):
-    def __init__(self, config: dict[str, Any]) -> None:
-        """Initializes the Particle Gun generator.
+    def __init__(self, config_gen: GeneratorConfig) -> None:
+        """Initializes the particle gun generator.
 
         Args:
-            config (dict[str, Any]): The configuration dictionary.
+            config_gen (GeneratorConfig): Generator configuration parameters.
         """
         super().__init__()
-        self.config: dict[str, Any] = config["generator"]
-        self.particle_gun = G4ParticleGun(self.config["parameters"]["n_events"])
+        self.config = config_gen
+        self.particle_gun = G4ParticleGun(self.config.n_events)
         self.logger = logging.getLogger("main")
 
         # Particle type
         self.particle = G4ParticleTable.GetParticleTable().FindParticle(
-            self.config["parameters"]["particle"]
+            self.config.particle
         )
         self.particle_gun.SetParticleDefinition(self.particle)
         self.logger.debug(f"Particle: {self.particle.GetParticleName()}")
         # Direction and origin of the particle
-        px, py, pz = self.config["parameters"]["direction"]
-        x, y, z = self.config["parameters"]["position"]
+        px, py, pz = self.config.direction
+        x, y, z = self.config.position
 
         self.particle_gun.SetParticleMomentumDirection(G4ThreeVector(px, py, pz))
         self.particle_gun.SetParticlePosition(G4ThreeVector(x * km, y * km, z * km))
@@ -66,8 +67,8 @@ class ParticleGunGenerator(G4VUserPrimaryGeneratorAction):
         self.logger.debug(f"Particle position: {x} {y} {z}")
 
         # Energy of the particle
-        self.particle_gun.SetParticleEnergy(self.config["parameters"]["energy"] * GeV)
-        self.logger.debug(f"Particle energy: {self.config['parameters']['energy']} GeV")
+        self.particle_gun.SetParticleEnergy(self.config.energy * GeV)
+        self.logger.debug(f"Particle energy: {self.config.energy} GeV")
 
     def GeneratePrimaries(self, arg0: G4Event) -> None:
         """Generates the primary particles.

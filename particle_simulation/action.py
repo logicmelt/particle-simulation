@@ -1,13 +1,20 @@
 from geant4_pybind import (
+    G4ClassificationOfNewTrack,
     G4VUserActionInitialization,
     G4UserRunAction,
     G4Run,
     G4Track,
     G4AnalysisManager,
     G4UserTrackingAction,
+    G4UserStackingAction,
+    G4ClassificationOfNewTrack,
+    G4Electron,
+    G4Positron, 
 )
 from particle_simulation.generator import GPSGenerator, ParticleGunGenerator
+from particle_simulation.config import Config
 from typing import Any
+
 import logging
 import pathlib
 
@@ -15,27 +22,27 @@ GENERATORS = {"gps": GPSGenerator, "particle_gun": ParticleGunGenerator}
 
 
 class ActionInitialization(G4VUserActionInitialization):
-    def __init__(self, config: dict[str, Any], processNum: int) -> None:
+    def __init__(self, config_pyd: Config, processNum: int) -> None:
         """
         Initializes an instance of the G4VUserActionInitialization class that allows to create the user actions.
         Args:
-            config (dict[str, Any]): The configuration dictionary.
+            config_pyd (Config): Configuration settings.
             processNum (int): The process number. Used to create unique output files.
         Returns:
             None
         """
 
         super().__init__()
-        self.config = config
+        self.config = config_pyd
         # Create the generator
-        self.generator: str = self.config["generator"]["type"].lower()
+        self.generator: str = self.config.generator.gen_type
         self.logger = logging.getLogger("main")
         self.processNum = processNum
 
     def Build(self) -> None:
         """This function is called by the run manager to build the user actions."""
         # In this function we can create Run, Event and Tracking actions (e.g.: Saving data per track, event, etc.)
-        gen = GENERATORS[self.generator](self.config)
+        gen = GENERATORS[self.generator](self.config.generator)
         self.logger.info(f"Using the generator: {self.generator}")
         # Set the generator as user action
         self.SetUserAction(gen)
@@ -43,20 +50,38 @@ class ActionInitialization(G4VUserActionInitialization):
         self.SetUserAction(RunAct(self.config, self.processNum))
         # Set the user tracking action
         # self.SetUserAction(TrackingAction(self.config))
+        # Set the user stacking action (This is used to kill particles not needed for the sim: electrons and positrons)
+        self.SetUserAction(StackingAction())
 
+class StackingAction(G4UserStackingAction):
+    def ClassifyNewTrack(self, aTrack: G4Track) -> G4ClassificationOfNewTrack:
+        """This function is called for every new track in the stack.
+
+        Args:
+            aTrack (G4Track): A track object from Geant4.
+
+        Returns:
+            G4ClassificationOfNewTrack: The classification of the new track.
+        """
+        # Kill positrons and electrons. They are not interesting for us as they cant generate muons
+        if aTrack.GetDefinition() == G4Electron.Electron():
+            return G4ClassificationOfNewTrack.fKill
+        if aTrack.GetDefinition() == G4Positron.Positron():
+            return G4ClassificationOfNewTrack.fKill
+        return G4ClassificationOfNewTrack.fUrgent
 
 class RunAct(G4UserRunAction):
-    def __init__(self, config: dict[str, Any], processNum: int) -> None:
+    def __init__(self, config_pyd: Config, processNum: int) -> None:
         """Initializes a run action that is called at the beginning and end of a run.
 
         Args:
-            config (dict[str, Any]): The configuration dictionary.
+            config_pyd (Config): Configuration parameters.
             processNum (int): The process number. Used to create unique output files.
         """
         super().__init__()
-        self.config = config
+        self.config = config_pyd
         self.logger = logging.getLogger("main")
-        self.save_dir = pathlib.Path(self.config["save_dir"])
+        self.save_dir = pathlib.Path(config_pyd.save_dir)
         self.processNum = processNum
         # Create an analysis manager
         # This is a singleton class, so we can access it from anywhere
@@ -118,14 +143,14 @@ class RunAct(G4UserRunAction):
 
 
 class TrackingAction(G4UserTrackingAction):
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(self, config_pyd: Config) -> None:
         """Initializes a tracking action that allows to interact with the information of the tracked particle.
 
         Args:
-            config (dict[str, Any]): The configuration dictionary.
+            config_pyd (Config): Configuration parameters.
         """
         super().__init__()
-        self.config = config
+        self.config = config_pyd
         self.logger = logging.getLogger("main")
 
     def PreUserTrackingAction(self, arg0: G4Track) -> None:
