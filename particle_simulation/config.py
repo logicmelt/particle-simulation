@@ -14,7 +14,7 @@ class GeneratorConfig(BaseSettings):
     )
     n_events: int = Field(
         default=1,
-        gt=0,
+        ge=1,
         description=(
             "Number of particles to be shoot at one invokation of GeneratePrimaryVertex()"
             "method for a particle gun (Same physical quantities)"
@@ -77,31 +77,41 @@ class SensitiveDetectorConfig(BaseSettings):
     )
     altitude: tuple[float, ...] = Field(
         default=(0.0,),
-        min_length=1,
         description="Altitude of the sensitive detector in km",
     )
     particles: tuple[str, ...] = Field(
-        default=("mu-",), min_length=1, description="List of particles to be detected"
+        default=("mu-",), description="List of particles to be detected"
     )
 
     @model_validator(mode="after")
     def validate_data(self) -> "SensitiveDetectorConfig":
         """Validate the data in the SensitiveDetectorConfig."""
-        for particle in self.particles:
-            assert particle in [
-                "e-",
-                "e+",
-                "gamma",
-                "mu-",
-                "mu+",
-                "nu_e",
-                "nu_mu",
-                "proton",
-                "neutron",
-                "geantino",
-                "chargedgeantino",
-                "all",
-            ], f"Invalid particle {particle}"
+        if self.enabled:
+            # If the sensitive detector is enabled, the altitude and particles must be provided
+            assert (
+                len(self.altitude) > 0
+            ), "At least one altitude must be provided to place the sensitive detector"
+            assert (
+                len(self.particles) > 0
+            ), "At least one particle must be provided for the sensitive detector"
+            # Validate the altitude and particles values
+            for alt in self.altitude:
+                assert alt >= 0, "Altitude must be positive or zero"
+            for particle in self.particles:
+                assert particle in [
+                    "e-",
+                    "e+",
+                    "gamma",
+                    "mu-",
+                    "mu+",
+                    "nu_e",
+                    "nu_mu",
+                    "proton",
+                    "neutron",
+                    "geantino",
+                    "chargedgeantino",
+                    "all",
+                ], f"Invalid particle {particle} for the sensitive detector"
         return self
 
 
@@ -112,7 +122,7 @@ class DensityProfileConfig(BaseSettings):
         default="", description="Path to the json file with the density profiles."
     )
     day_idx: int = Field(
-        default=0, gt=-1, description="Index of the day in the density file"
+        default=0, ge=0, description="Index of the day in the density file"
     )
 
 
@@ -139,8 +149,8 @@ class MagneticFieldConfig(BaseSettings):
     )
     longitude: float = Field(
         default=-8.716,
-        le=90,
-        ge=-90,
+        le=180,
+        ge=-180,
         description="Longitude of the detector in decimal degrees (World Geodetic System 1984)."
         "Positive east of the prime meridian (default: -8.716).",
     )
@@ -231,17 +241,19 @@ class Config(BaseSettings):
         description="Random seed for reproducibility. If not provided, it will be set to the current time",
     )
     num_processes: int = Field(
-        default=1, gt=0, description="Number of processes to use for simulation"
+        default=1, ge=1, description="Number of processes to use for simulation"
     )
     logger_level: Annotated[str, StringConstraints(to_upper=True)] = Field(
         default="INFO", description="Logger level"
     )
     particles_per_run: int = Field(
-        default=1, gt=0, description="Number of particles to be generated per run"
+        default=1, ge=1, description="Number of particles to be generated per run"
     )
     generator: GeneratorConfig = GeneratorConfig()
     constructor: ConstructorConfig = ConstructorConfig()
-    macro_files: tuple[str, ...] | str = Field(description="Macro files to be executed")
+    macro_files: tuple[str, ...] | str = Field(
+        description="Macro files to be executed as a list or a single string"
+    )
     save_dir: str = Field(description="Directory to save the output files")
 
     @model_validator(mode="after")
