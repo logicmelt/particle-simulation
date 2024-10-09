@@ -12,7 +12,7 @@ poetry install --no-root
 
 ## Simulation
 
-Particle-simulation supports both API and CLI-based simulations.
+With the package installed, it can be run both by API and CLI-based commands.
 
 ```python
 import particle_simulation.config as config
