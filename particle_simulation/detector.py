@@ -4,6 +4,7 @@ from geant4_pybind import (
     G4TouchableHistory,
     G4AnalysisManager,
     G4RunManager,
+    fStopAndKill
 )
 from particle_simulation.config import ConstructorConfig
 import logging
@@ -64,6 +65,12 @@ class SensDetector(G4VSensitiveDetector):
         # Get the momentum and position
         momentum = arg0.GetPreStepPoint().GetMomentum()
         position = arg0.GetPreStepPoint().GetPosition()
+
+        # If the particle has reached the ground level, stop the track
+        # Otherwise we might have double counting of particles
+        z_pos = position.z - self.correction_factor
+        if z_pos <= 5000: # In mm
+            track.SetTrackStatus(fStopAndKill)
 
         # Fill the N tuple
         analysisManager.FillNtupleIColumn(0, event_id)
