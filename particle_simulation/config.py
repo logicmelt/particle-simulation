@@ -118,7 +118,7 @@ class SensitiveDetectorConfig(BaseSettings):
 class DensityProfileConfig(BaseSettings):
     """Configuration settings for the density profile."""
 
-    density_file: str = Field(
+    density_file: pathlib.Path = Field(
         default="", description="Path to the json file with the density profiles."
     )
     day_idx: int = Field(
@@ -136,7 +136,7 @@ class MagneticFieldConfig(BaseSettings):
         default="file",
         description="Source of the magnetic field: file or estimated from latitude, longitude and date.",
     )
-    mag_file: str = Field(
+    mag_file: pathlib.Path = Field(
         default="",
         description=(
             "File containing the magnetic field as a csv with 7 columns:"
@@ -191,7 +191,7 @@ class ConstructorConfig(BaseSettings):
     input_geom: Annotated[str, StringConstraints(to_lower=True)] = Field(
         default="custom", description="gdml or custom"
     )
-    gdml_file: str = Field(default="", description="GDML file to be used")
+    gdml_file: pathlib.Path = Field(default="", description="GDML file to be used")
     magnetic_field: MagneticFieldConfig = MagneticFieldConfig()
     sensitive_detectors: SensitiveDetectorConfig = Field(
         default=SensitiveDetectorConfig()
@@ -254,23 +254,21 @@ class Config(BaseSettings):
     )
     generator: GeneratorConfig = GeneratorConfig()
     constructor: ConstructorConfig = ConstructorConfig()
-    macro_files: tuple[str, ...] | str = Field(
+    macro_files: tuple[pathlib.Path, ...] | pathlib.Path = Field(
         description="Macro files to be executed as a list or a single string"
     )
-    save_dir: str = Field(description="Directory to save the output files")
+    save_dir: pathlib.Path = Field(description="Directory to save the output files")
 
     @model_validator(mode="after")
     def validate_data(self) -> "Config":
         """Validate the data in the Config."""
-        if isinstance(self.macro_files, str):
-            assert pathlib.Path(
-                self.macro_files
-            ).is_file(), f"Macro file {self.macro_files} not found"
+        if isinstance(self.macro_files, pathlib.Path):
+            assert (
+                self.macro_files.is_file()
+            ), f"Macro file {self.macro_files} not found"
         else:
             for macro_file in self.macro_files:
-                assert pathlib.Path(
-                    macro_file
-                ).is_file(), f"Macro file {macro_file} not found"
+                assert macro_file.is_file(), f"Macro file {macro_file} not found"
         assert self.logger_level in [
             "DEBUG",
             "INFO",
@@ -279,22 +277,20 @@ class Config(BaseSettings):
             "CRITICAL",
         ], f"Invalid logger level {self.logger_level}"
         if self.constructor.input_geom == "gdml":
-            assert pathlib.Path(
-                self.constructor.gdml_file
-            ).is_file(), f"GDML File {self.constructor.gdml_file} not found"
+            assert (
+                self.constructor.gdml_file.is_file()
+            ), f"GDML File {self.constructor.gdml_file} not found"
 
         if self.constructor.magnetic_field.mag_source == "file":
-            assert pathlib.Path(
-                self.constructor.magnetic_field.mag_file
-            ).is_file(), f"Magnetic field file {self.constructor.magnetic_field.mag_file} not found"
+            assert (
+                self.constructor.magnetic_field.mag_file.is_file()
+            ), f"Magnetic field file {self.constructor.magnetic_field.mag_file} not found"
 
-        assert pathlib.Path(
-            self.constructor.density_profile.density_file
-        ).is_file(), (
-            f"Density profile file {self.constructor.density_profile} not found"
-        )
+        assert (
+            self.constructor.density_profile.density_file.is_file()
+        ), f"Density profile file {self.constructor.density_profile} not found"
 
-        assert pathlib.Path(self.constructor.density_profile.density_file).suffix in [
+        assert self.constructor.density_profile.density_file.suffix in [
             ".json"
         ], f"Invalid density profile file extension"
         return self

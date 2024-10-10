@@ -5,24 +5,25 @@ from geant4_pybind import (
     G4AnalysisManager,
     G4RunManager,
 )
-from typing import Any
 from particle_simulation.config import ConstructorConfig
 import logging
 
 
 class SensDetector(G4VSensitiveDetector):
     def __init__(
-        self, config_file: ConstructorConfig, name: str, correction_factor: float = 0.0
+        self, config_file: ConstructorConfig, name: str, process_num: int, correction_factor: float = 0.0
     ) -> None:
         """Initializes a sensitive detector that will be used to save data from the simulation.
 
         Args:
             config_file (ConstructorConfig): Configuration settings for the constructor.
             name (str): Name of the sensitive detector.
+            process_num (int): Process number. Used to tag the detected particles.
             correction_factor (float, optional): Correction factor to the z-axis of the particles due to the geometry. Defaults to 0.0.
         """
         super().__init__(name)
         self.config = config_file
+        self.process_num = process_num 
         self.accepted_particles: set[str] = set(
             self.config.sensitive_detectors.particles
         )
@@ -67,14 +68,15 @@ class SensDetector(G4VSensitiveDetector):
         # Fill the N tuple
         analysisManager.FillNtupleIColumn(0, event_id)
         analysisManager.FillNtupleIColumn(1, track_id)
-        analysisManager.FillNtupleSColumn(2, particle_type)
-        analysisManager.FillNtupleIColumn(3, particle)
-        analysisManager.FillNtupleDColumn(4, momentum.x)
-        analysisManager.FillNtupleDColumn(5, momentum.y)
-        analysisManager.FillNtupleDColumn(6, momentum.z)
-        analysisManager.FillNtupleDColumn(7, position.x)
-        analysisManager.FillNtupleDColumn(8, position.y)
-        analysisManager.FillNtupleDColumn(9, position.z - self.correction_factor)
+        analysisManager.FillNtupleIColumn(2, self.process_num)
+        analysisManager.FillNtupleSColumn(3, particle_type)
+        analysisManager.FillNtupleIColumn(4, particle)
+        analysisManager.FillNtupleDColumn(5, momentum.x)
+        analysisManager.FillNtupleDColumn(6, momentum.y)
+        analysisManager.FillNtupleDColumn(7, momentum.z)
+        analysisManager.FillNtupleDColumn(8, position.x)
+        analysisManager.FillNtupleDColumn(9, position.y)
+        analysisManager.FillNtupleDColumn(10, position.z - self.correction_factor)
 
         # Add to the Ntuple
         analysisManager.AddNtupleRow(0)

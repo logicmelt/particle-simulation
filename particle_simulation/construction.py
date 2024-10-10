@@ -21,8 +21,6 @@ from geant4_pybind import (
     G4GenericMessenger,
 )
 
-from typing import Any
-
 # Import units
 from geant4_pybind import kelvin, kg, m3, perCent, radian, km, mm, tesla
 
@@ -30,7 +28,6 @@ from particle_simulation.config import Config, MagneticFieldConfig
 from pygeomag import GeoMag
 import pandas as pd
 import numpy as np
-import pathlib
 import json
 
 # Sensitive detector
@@ -94,15 +91,17 @@ class UniformMagneticField(G4MagneticField):
 
 
 class DetectorConstruction(G4VUserDetectorConstruction):
-    def __init__(self, config_pyd: Config) -> None:
+    def __init__(self, config_pyd: Config, process_num: int) -> None:
         """Constructs the geometry of the detector from the configuration file.
 
         Args:
             config (dict[str, Any]): The configuration file with the parameters of the detector.
+            process_num (int): The process number. Used to tag the particles that reach the sensitive detectors.
         """
         super().__init__()
         self.config = config_pyd.constructor
-        self.save_dir: str = config_pyd.save_dir
+        self.save_dir = config_pyd.save_dir
+        self.process_num = process_num
         self.logic_volume: np.ndarray = np.array([])
         self.sensitive_detector: np.ndarray = np.array([])
         self.correction_factor: float = (
@@ -152,7 +151,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         # Construct the geometry
         if self.config.input_geom == "gdml":
             # Load the geometry from a GDML file
-            self.gdml_parser.Read(self.gdml_file)
+            self.gdml_parser.Read(str(self.gdml_file))
             # The number of layers is the number of daughters of the world volume
             self.density_points = (
                 self.gdml_parser.GetWorldVolume().GetLogicalVolume().GetNoDaughters()
@@ -176,7 +175,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
 
         # Export the geometry to a GDML file
         if self.export_gdml:
-            outputPath = pathlib.Path(self.save_dir) / "geometry.gdml"
+            outputPath = self.save_dir / "geometry.gdml"
             if outputPath.exists():
                 outputPath.unlink()
             self.gdml_parser.Write(str(outputPath), world_volume)
@@ -222,7 +221,10 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             for i in range(len(self.sensitive_detector)):
                 # We add the correction factor to the sensitive detector so that we the z-axis is distance from the surface.
                 sensitive_det = particle_simulation.detector.SensDetector(
-                    self.config, "sensitive_detector_" + str(i), self.correction_factor
+                    self.config,
+                    "sensitive_detector_" + str(i),
+                    self.process_num,
+                    self.correction_factor
                 )
                 sdManager.AddNewDetector(sensitive_det)
                 self.sensitive_detector[i].SetSensitiveDetector(sensitive_det)

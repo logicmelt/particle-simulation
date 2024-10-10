@@ -4,12 +4,15 @@ from geant4_pybind import (
     G4UserRunAction,
     G4Run,
     G4Track,
+    G4Event,
     G4AnalysisManager,
     G4UserTrackingAction,
     G4UserStackingAction,
+    G4UserEventAction,
     G4ClassificationOfNewTrack,
     G4Electron,
     G4Positron,
+    MeV,
 )
 from particle_simulation.generator import GPSGenerator, ParticleGunGenerator
 from particle_simulation.config import Config
@@ -52,6 +55,8 @@ class ActionInitialization(G4VUserActionInitialization):
         # self.SetUserAction(TrackingAction(self.config))
         # Set the user stacking action (This is used to kill particles not needed for the sim: electrons and positrons)
         self.SetUserAction(StackingAction())
+        # Set the user event action (This is used to save the energy of the primary particles)
+        self.SetUserAction(UserEvent(self.config, self.processNum))
 
 
 class StackingAction(G4UserStackingAction):
@@ -83,7 +88,7 @@ class RunAct(G4UserRunAction):
         super().__init__()
         self.config = config_pyd
         self.logger = logging.getLogger("main")
-        self.save_dir = pathlib.Path(config_pyd.save_dir)
+        self.save_dir = config_pyd.save_dir
         self.processNum = processNum
         # Create an analysis manager
         # This is a singleton class, so we can access it from anywhere
@@ -95,6 +100,8 @@ class RunAct(G4UserRunAction):
         # Event ID and track ID
         analysisManager.CreateNtupleIColumn("eventID")
         analysisManager.CreateNtupleIColumn("trackID")
+        # Process ID so that we can identify the process that generated the particles
+        analysisManager.CreateNtupleIColumn("process_ID")
 
         # Particle type and particle ID
         analysisManager.CreateNtupleSColumn("particle_type")
@@ -142,6 +149,37 @@ class RunAct(G4UserRunAction):
         # Close the file
         analysisManager.CloseFile()
         self.logger.info("Finished writing the data to the output file")
+
+
+class UserEvent(G4UserEventAction):
+    def __init__(self, config_pyd: Config, process_num: int) -> None:
+        """Initializes an event action that is called at the beginning and end of an event.
+
+        Args:
+            config_pyd (Config): Configuration parameters.
+            process_num (int): The process number. Used to create unique output files.
+        """
+        # This action is used to save the energy of the primary particles (e.g.: protons that reach the atmosphere)
+        # so that we can compare it with the energy of the particles that reach the sensitive detectors.
+        super().__init__()
+        self.config = config_pyd
+        self.logger = logging.getLogger("main")
+        self.process_num = process_num
+
+    def BeginOfEventAction(self, anEvent: G4Event) -> None:
+        """This function is called at the beginning of an event.
+
+        Args:
+            anEvent (G4Event): An event object from Geant4.
+        """
+        # Get energy of the event
+        event = anEvent.GetPrimaryVertex(0)  # gps only throws one particle
+        energy = event.GetPrimary().GetMomentum().mag() / MeV
+        # Save the event ID and the energy
+        with open(
+            self.config.save_dir / f"primary_info_{self.process_num}.txt", "a"
+        ) as f:
+            f.write(f"{anEvent.GetEventID()} {energy} \n")
 
 
 class TrackingAction(G4UserTrackingAction):
