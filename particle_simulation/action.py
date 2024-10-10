@@ -9,7 +9,7 @@ from geant4_pybind import (
     G4UserStackingAction,
     G4ClassificationOfNewTrack,
     G4Electron,
-    G4Positron, 
+    G4Positron,
 )
 from particle_simulation.generator import GPSGenerator, ParticleGunGenerator
 from particle_simulation.config import Config
@@ -53,6 +53,7 @@ class ActionInitialization(G4VUserActionInitialization):
         # Set the user stacking action (This is used to kill particles not needed for the sim: electrons and positrons)
         self.SetUserAction(StackingAction())
 
+
 class StackingAction(G4UserStackingAction):
     def ClassifyNewTrack(self, aTrack: G4Track) -> G4ClassificationOfNewTrack:
         """This function is called for every new track in the stack.
@@ -69,6 +70,7 @@ class StackingAction(G4UserStackingAction):
         if aTrack.GetDefinition() == G4Positron.Positron():
             return G4ClassificationOfNewTrack.fKill
         return G4ClassificationOfNewTrack.fUrgent
+
 
 class RunAct(G4UserRunAction):
     def __init__(self, config_pyd: Config, processNum: int) -> None:

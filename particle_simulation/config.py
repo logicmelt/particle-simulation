@@ -129,6 +129,9 @@ class DensityProfileConfig(BaseSettings):
 class MagneticFieldConfig(BaseSettings):
     """Configuration settings for the magnetic field."""
 
+    enabled: bool = Field(
+        default=True, description="Enable or disable the magnetic field"
+    )
     mag_source: Annotated[str, StringConstraints(to_lower=True)] = Field(
         default="file",
         description="Source of the magnetic field: file or estimated from latitude, longitude and date.",
