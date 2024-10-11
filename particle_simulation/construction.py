@@ -224,7 +224,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                     self.config,
                     "sensitive_detector_" + str(i),
                     self.process_num,
-                    self.correction_factor
+                    self.correction_factor,
                 )
                 sdManager.AddNewDetector(sensitive_det)
                 self.sensitive_detector[i].SetSensitiveDetector(sensitive_det)

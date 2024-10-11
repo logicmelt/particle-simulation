@@ -4,7 +4,7 @@ from geant4_pybind import (
     G4TouchableHistory,
     G4AnalysisManager,
     G4RunManager,
-    fStopAndKill
+    fStopAndKill,
 )
 from particle_simulation.config import ConstructorConfig
 import logging
@@ -12,7 +12,11 @@ import logging
 
 class SensDetector(G4VSensitiveDetector):
     def __init__(
-        self, config_file: ConstructorConfig, name: str, process_num: int, correction_factor: float = 0.0
+        self,
+        config_file: ConstructorConfig,
+        name: str,
+        process_num: int,
+        correction_factor: float = 0.0,
     ) -> None:
         """Initializes a sensitive detector that will be used to save data from the simulation.
 
@@ -24,7 +28,7 @@ class SensDetector(G4VSensitiveDetector):
         """
         super().__init__(name)
         self.config = config_file
-        self.process_num = process_num 
+        self.process_num = process_num
         self.accepted_particles: set[str] = set(
             self.config.sensitive_detectors.particles
         )
@@ -69,7 +73,7 @@ class SensDetector(G4VSensitiveDetector):
         # If the particle has reached the ground level, stop the track
         # Otherwise we might have double counting of particles
         z_pos = position.z - self.correction_factor
-        if z_pos <= 5000: # In mm
+        if z_pos <= 5000:  # In mm
             track.SetTrackStatus(fStopAndKill)
 
         # Fill the N tuple
