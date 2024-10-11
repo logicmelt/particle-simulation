@@ -233,11 +233,11 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         """Gets the magnetic field from a file or estimate it from position and a time.
 
         Args:
-            mag_file (MagneticFieldConfig): Magnetic field configuration with a path to a file in csv format or the position in
+            mag_file (MagneticFieldConfig): Magnetic field configuration with a path to a file in csv format (Units: nT) or the position in
                 latitude-longitude coordinates (geodetic coordinates) and the date.
 
         Returns:
-            np.ndarray: The magnetic field in cartesian coordinates and altitude.
+            np.ndarray: The magnetic field[Teslas] in cartesian coordinates and altitude[km] (sea level).
         """
         # Parse the magnetic field from a file
         if mag_config.mag_source != "file":

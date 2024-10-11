@@ -102,8 +102,9 @@ class SimRunner:
         )
         logger.info(f"Running process: {process_num}/{self.num_processes}")
 
-        # Set the random seed
-        G4Random.getTheEngine().setSeed(process_num + self.config.random_seed, 0)
+        # Set the random seed. process_num starts at 1 so we need to subtract 1 to have
+        # the original seed as the first one.
+        G4Random.getTheEngine().setSeed(process_num - 1 + self.config.random_seed, 0)
         logger.info(f"Random seed: {process_num + self.config.random_seed}")
 
         # Macro files
