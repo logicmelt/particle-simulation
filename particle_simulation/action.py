@@ -56,7 +56,7 @@ class ActionInitialization(G4VUserActionInitialization):
         # Set the user stacking action (This is used to kill particles not needed for the sim: electrons and positrons)
         self.SetUserAction(StackingAction())
         # Set the user event action (This is used to save the energy of the primary particles)
-        self.SetUserAction(UserEvent(self.config, self.processNum))
+        # self.SetUserAction(UserEvent(self.config, self.processNum))
 
 
 class StackingAction(G4UserStackingAction):
