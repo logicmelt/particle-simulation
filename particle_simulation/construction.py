@@ -621,11 +621,11 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         with open(self.config.density_profile.density_file, "r") as f:
             data = json.load(f)
         # Choose the day to be used from the configuration
-        data_day = data[str(self.config.density_profile.day_idx)]
-        # Get the height, temperature and density
-        height = np.array(data_day["altitude"]) * km
-        temp = np.array(data_day["T"])
-        density = np.array(data_day["density"])
+        data_day = np.array(data[str(self.config.density_profile.day_idx)])
+        # Get the height (First column), temperature (Second column) and density (Last column)
+        height = data_day[:, 0] * km
+        temp = data_day[:, 1]
+        density = data_day[:, 2]
         # Interpolate the density and temperature to the height of the atmosphere
         inter_height = np.linspace(0, self.atmosphere_height, self.density_points)
         density = np.interp(inter_height, height, density)
