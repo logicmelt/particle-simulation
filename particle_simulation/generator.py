@@ -3,14 +3,12 @@ from geant4_pybind import (
     G4GeneralParticleSource,
     G4VUserPrimaryGeneratorAction,
     G4ParticleTable,
-    G4ParticleDefinition,
     G4ThreeVector,
     G4Event,
 )
 
 # Units
 from geant4_pybind import GeV, km
-from typing import Any
 from particle_simulation.config import GeneratorConfig
 import logging
 

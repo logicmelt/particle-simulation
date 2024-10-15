@@ -1,7 +1,7 @@
 save_dir: "test_data/" # Directory where the output files will be saved
 random_seed: 42 # Seed for the random number generator
 num_processes: 5 # Number of processes to be used in the simulation
-macro_files: ["additional_files/macro_files/gps_flat.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
+macro_files: ["additional_files/macro_files/gps_flat_cutRange.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
 particles_per_run: 100 # Number of particles to be generated per run
 
@@ -22,12 +22,13 @@ constructor:
   gdml_file: "test_data/geometry_flat.gdml" # Path to the GDML file
 
   magnetic_field: # Parameters for the magnetic field 
-    mag_source: "file"
+    enabled: True # Enable the magnetic field
+    mag_source: "estimated" # "estimated" or "file". If estimated the magnetic field will be calculated from the latitude, longitude and date
     mag_file: "additional_files/data_files/mag_field_vigo.csv" # Path to the magnetic field file or "None" if no magnetic field is used
                                                   # Units should be in nT
-    latitude: 42.2 # Latitude of the detector in degrees
-    longitude: -8.7 # Longitude of the detector in degrees
-    mag_time: "2019-07-01" # Date of the magnetic field in YYYY-MM-DD format.
+    latitude: 42.224 # Latitude of the detector in degrees
+    longitude: -8.716 # Longitude of the detector in degrees
+    mag_time: "2024-10-10" # Date of the magnetic field in YYYY-MM-DD format.
                             
   sensitive_detectors:
     enabled: True # Enable the sensitive detectors

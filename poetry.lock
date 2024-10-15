@@ -847,6 +847,17 @@ toml = ["tomli (>=2.0.1)"]
 yaml = ["pyyaml (>=6.0.1)"]
 
 [[package]]
+name = "pygeomag"
+version = "1.0.2"
+description = "A python port of the World Magnetic Model (WMM)"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pygeomag-1.0.2-py3-none-any.whl", hash = "sha256:d20c4e7fd8bd5930470847aee0451abd51a1ad914f79bc6a0b92f24a6d11e75c"},
+    {file = "pygeomag-1.0.2.tar.gz", hash = "sha256:91d83efa89ade2f895aa3dd145479ea5784382f097f0e6aa9df5f326e5bf860b"},
+]
+
+[[package]]
 name = "pyparsing"
 version = "3.1.2"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
@@ -1059,4 +1070,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "7abe3ea36c281a68efe04e32d85736c0b643305b0e3f7a1111320f399869a8e4"
+content-hash = "55d315676de50fbd81347061cd855f9f2919034b94e5f1ca7d7f5133274236e7"

@@ -1,0 +1,3 @@
+The density profiles are expected as json files with the days (integers) as keys. Each day should contain one array of shape (N,3) where the first column is the height in **kilometers**, the second the temperature in **Kelvin** and the third the density in **kg/m3**.
+
+See [additional_files/data_files/density_temp_height.json](https://github.com/logicmelt/particle-simulation/blob/feature/magnetic_field/additional_files/data_files/density_temp_height.json) for an example.

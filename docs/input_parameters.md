@@ -31,6 +31,7 @@ All available parameters are:
     - density_file (str, **Required**): Path to the json file with the density profiles.
     - day_idx (int, Optional): Index of the day in the density file. Defaults to 0.
   - magnetic_field:
+    - enabled (bool, Optional): Enable the magnetic field in the simulation. Defaults to True.
     - mag_source (str, Optional): Source of the magnetic field: "file" or "estimated" (from latitude, longitude and date). Defaults to file.
     - mag_file (str, Optional): File containing the magnetic field as a csv with 7 columns: Bx, By, Bz, altitude, latitude, longitude and date. Required if mag_source is file.
     - latitude (float, Optional): Latitude of the detector in decimal degrees (World Geodetic System 1984). Positive north equator and values between -90º to 90º. Defaults t 42.224º.

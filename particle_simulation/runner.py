@@ -1,8 +1,7 @@
 import pathlib
-import itertools
 import multiprocessing
+import pandas as pd
 
-from typing import Any
 from particle_simulation import config
 
 from geant4_pybind import (
@@ -32,14 +31,36 @@ class SimRunner:
         # The configuration data
         self.config = config_data
         # Create the output directory
-        self.save_dir = create_incremental_outdir(pathlib.Path(self.config.save_dir))
+        self.save_dir = create_incremental_outdir(self.config.save_dir)
         # Update the save directory in the configuration
-        self.config.save_dir = str(self.save_dir)
+        self.config.save_dir = self.save_dir
         # Save config in the output directory
         with open(self.save_dir / f"sim_config.json", "w") as f:
             f.write(self.config.model_dump_json(indent=4))
         # Get the number of processes
         self.num_processes = self.config.num_processes
+        # Create the header for the output file
+        self.header = [
+            "EventID",
+            "TrackID",
+            "process_ID",
+            "Particle",
+            "ParticleID",
+            "px",
+            "py",
+            "pz",
+            "x",
+            "y",
+            "z",
+        ]
+        self.new_header = {
+            "x": "x[mm]",
+            "y": "y[mm]",
+            "z": "z[mm]",
+            "px": "px[MeV]",
+            "py": "py[MeV]",
+            "pz": "pz[MeV]",
+        }
 
     def run(self) -> None:
         # Run the simulation in parallel if the number of processes is greater than 1
@@ -50,6 +71,28 @@ class SimRunner:
             with multiprocessing.Pool(self.num_processes) as pool:
                 pool.map(self.simulation, list_processes)
 
+        # Now, we need to merge the output files into a single one
+        output_files = [p for p in self.save_dir.rglob("*.csv")]
+        if (
+            len(output_files) == 0
+        ):  # No files were generated so no particles reached the sensitive detectors
+            raise Warning("No particles were generated with the given configuration")
+
+        data = pd.concat(
+            [
+                pd.read_csv(file_x, skiprows=15, names=self.header)
+                for file_x in output_files
+            ],
+            ignore_index=True,
+        )
+        # Save the data as csv after sorting it by process_ID, EventID, and TrackID (Priority order)
+        data.rename(self.new_header, axis="columns", inplace=True)
+        data.sort_values(by=["process_ID", "EventID", "TrackID"], inplace=True)
+        data.to_csv(self.save_dir / "output.csv", index=False)
+        # Remove the individual files
+        for file_x in output_files:
+            file_x.unlink()
+
     def simulation(self, process_num: int) -> int:
         # Create a logger
         logger = create_logger(
@@ -59,8 +102,9 @@ class SimRunner:
         )
         logger.info(f"Running process: {process_num}/{self.num_processes}")
 
-        # Set the random seed
-        G4Random.getTheEngine().setSeed(process_num + self.config.random_seed, 0)
+        # Set the random seed. process_num starts at 1 so we need to subtract 1 to have
+        # the original seed as the first one.
+        G4Random.getTheEngine().setSeed(process_num - 1 + self.config.random_seed, 0)
         logger.info(f"Random seed: {process_num + self.config.random_seed}")
 
         # Macro files
@@ -71,7 +115,7 @@ class SimRunner:
 
         # Load the geometry
         logger.info("Loading the geometry")
-        runManager.SetUserInitialization(DetectorConstruction(self.config))
+        runManager.SetUserInitialization(DetectorConstruction(self.config, process_num))
         # Physics list
         logger.info("Loading the physics list")
         # runManager.SetUserInitialization(MyPhysicsList())
@@ -90,7 +134,7 @@ class SimRunner:
 
         # Apply the commands in the macro file
         logger.info(f"Running the macro files")
-        if isinstance(macro_files, str):
+        if isinstance(macro_files, pathlib.Path):
             logger.info(f"Applying the commands in the macro file: {macro_files}")
             uiManager.ApplyCommand(f"/control/execute {macro_files}")
         else:

@@ -21,15 +21,13 @@ from geant4_pybind import (
     G4GenericMessenger,
 )
 
-from typing import Any
-
 # Import units
 from geant4_pybind import kelvin, kg, m3, perCent, radian, km, mm, tesla
 
 from particle_simulation.config import Config, MagneticFieldConfig
+from pygeomag import GeoMag
 import pandas as pd
 import numpy as np
-import pathlib
 import json
 
 # Sensitive detector
@@ -93,15 +91,17 @@ class UniformMagneticField(G4MagneticField):
 
 
 class DetectorConstruction(G4VUserDetectorConstruction):
-    def __init__(self, config_pyd: Config) -> None:
+    def __init__(self, config_pyd: Config, process_num: int) -> None:
         """Constructs the geometry of the detector from the configuration file.
 
         Args:
             config (dict[str, Any]): The configuration file with the parameters of the detector.
+            process_num (int): The process number. Used to tag the particles that reach the sensitive detectors.
         """
         super().__init__()
         self.config = config_pyd.constructor
-        self.save_dir: str = config_pyd.save_dir
+        self.save_dir = config_pyd.save_dir
+        self.process_num = process_num
         self.logic_volume: np.ndarray = np.array([])
         self.sensitive_detector: np.ndarray = np.array([])
         self.correction_factor: float = (
@@ -112,9 +112,6 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         # Logger
         self.logger = logging.getLogger("main")
         self.logger.info("Creating the detector construction")
-
-        # Magnetic field
-        self.mag_field = self.parse_magnetic_field(self.config.magnetic_field)
 
         # GDML parser
         self.gdml_parser = G4GDMLParser()
@@ -137,7 +134,9 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             self.export_gdml = self.config.export_gdml
 
             # Define the density, temperature and materials
-            self.density, self.temp, _ = self.parse_density_temp_from_config()
+            self.density, self.temp, self.inter_heights = (
+                self.parse_density_temp_from_config()
+            )
             self.material, self.world_material = self.define_materials()
 
             # Lower and upper limits of the layers
@@ -152,7 +151,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         # Construct the geometry
         if self.config.input_geom == "gdml":
             # Load the geometry from a GDML file
-            self.gdml_parser.Read(self.gdml_file)
+            self.gdml_parser.Read(str(self.gdml_file))
             # The number of layers is the number of daughters of the world volume
             self.density_points = (
                 self.gdml_parser.GetWorldVolume().GetLogicalVolume().GetNoDaughters()
@@ -176,7 +175,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
 
         # Export the geometry to a GDML file
         if self.export_gdml:
-            outputPath = pathlib.Path(self.save_dir) / "geometry.gdml"
+            outputPath = self.save_dir / "geometry.gdml"
             if outputPath.exists():
                 outputPath.unlink()
             self.gdml_parser.Write(str(outputPath), world_volume)
@@ -190,26 +189,26 @@ class DetectorConstruction(G4VUserDetectorConstruction):
     def ConstructSDandField(self) -> None:
         """Construct the sensitive detectors and magnetic fields if any."""
         # Add sensitive detectors and magnetic fields if any
-        if self.mag_field is not None:
-            self.logger.info("Adding the magnetic field")
-            # Correct the altitude of the magnetic field
-            self.mag_field[:, 3] += self.correction_factor
+        if self.config.magnetic_field.enabled:
+            self.logger.info(
+                f"Adding a magnetic field from: {self.config.magnetic_field.mag_source}"
+            )
+            # Get the magnetic field from a file or estimate it from position and a time
+            mag_field = self.get_magnetic_field(self.config.magnetic_field)
             # Add the magnetic field to the layers
             for i in range(self.density_points):
                 # Get the altitude of the layer
                 altitude: float = (
                     self.altitude_limits[i][0] + self.altitude_limits[i][1]
                 ) / 2
-                # Search for the magnetic field at that altitude
-                chosen_mag = self.mag_field[
-                    np.argmin(np.abs(self.mag_field[:, 3] - altitude))
-                ]
                 self.logger.debug(
-                    f"At layer {i} (altitude: {altitude}) adding magnetic field from altitude {chosen_mag[3]}"
+                    f"At layer {i} (altitude: {altitude}) adding magnetic field from "
+                    f"altitude {self.inter_heights[i] + self.correction_factor}."
                 )
+                self.logger.debug("Magnetic field: " + str(mag_field[i]))
                 # Create the magnetic field
                 magField = UniformMagneticField(
-                    chosen_mag[0], chosen_mag[1], chosen_mag[2]
+                    mag_field[i, 0], mag_field[i, 1], mag_field[i, 2]
                 )
                 locField = G4FieldManager()
                 locField.CreateChordFinder(magField)
@@ -222,27 +221,44 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             for i in range(len(self.sensitive_detector)):
                 # We add the correction factor to the sensitive detector so that we the z-axis is distance from the surface.
                 sensitive_det = particle_simulation.detector.SensDetector(
-                    self.config, "sensitive_detector_" + str(i), self.correction_factor
+                    self.config,
+                    "sensitive_detector_" + str(i),
+                    self.process_num,
+                    self.correction_factor,
                 )
                 sdManager.AddNewDetector(sensitive_det)
                 self.sensitive_detector[i].SetSensitiveDetector(sensitive_det)
 
-    def parse_magnetic_field(
-        self, mag_config: MagneticFieldConfig
-    ) -> np.ndarray | None:
-        """Parse the magnetic field from a file or estimate it from position.
+    def get_magnetic_field(self, mag_config: MagneticFieldConfig) -> np.ndarray:
+        """Gets the magnetic field from a file or estimate it from position and a time.
 
         Args:
-            mag_file (MagneticFieldConfig): Magnetic field configuration with a path to a file in csv format or the position in
+            mag_file (MagneticFieldConfig): Magnetic field configuration with a path to a file in csv format (Units: nT) or the position in
                 latitude-longitude coordinates (geodetic coordinates) and the date.
 
         Returns:
-            np.ndarray: The magnetic field in cartesian coordinates and altitude. None if no file is provided.
+            np.ndarray: The magnetic field[Teslas] in cartesian coordinates and altitude[km] (sea level).
         """
         # Parse the magnetic field from a file
         if mag_config.mag_source != "file":
-            self.logger.info("No magnetic field file provided")
-            return
+            self.logger.info(
+                f"Estimating magnetic field at latitude: {mag_config.latitude}º and longitude: {mag_config.longitude}º "
+                f"on date: {mag_config.mag_time}"
+            )
+            gm = GeoMag()
+            mag_field = np.zeros((self.density_points, 3))
+            for i in range(self.density_points):
+                result = gm.calculate(
+                    glat=mag_config.latitude,
+                    glon=mag_config.longitude,
+                    alt=self.inter_heights[i] / km,
+                    time=mag_config.decimal_year,
+                )
+                # Change to -z because the magnetic field is defined positive towards the center of the earth
+                mag_field[i] = (
+                    np.array([result.x, result.y, -result.z]) * 1e-9
+                )  # nT to Tesla
+            return mag_field
         else:
             self.logger.info(f"Reading the magnetic field from {mag_config.mag_file}")
             open_csv = pd.read_csv(mag_config.mag_file)
@@ -250,8 +266,13 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             open_csv[["x", "y", "z"]] = open_csv[["x", "y", "z"]] * 1e-9
             # And the km column using the geant4 System of units
             open_csv["altitude"] = open_csv["altitude"] * km
-            # Print back the magnetic field and the altitude
-            return np.array(open_csv[["x", "y", "z", "altitude"]])
+            mag_field = np.array(open_csv[["x", "y", "z", "altitude"]])
+            # Interpolate to the layers altitude
+            new_x = np.interp(self.inter_heights, mag_field[:, 3], mag_field[:, 0])
+            new_y = np.interp(self.inter_heights, mag_field[:, 3], mag_field[:, 1])
+            new_z = np.interp(self.inter_heights, mag_field[:, 3], mag_field[:, 2])
+            # Return the interpolated magnetic field:
+            return np.array([new_x, new_y, new_z]).T
 
     def construct_flat_world(self) -> tuple[G4VPhysicalVolume, np.ndarray]:
         """Construct a flat world volume with layers of the atmosphere.
@@ -600,11 +621,11 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         with open(self.config.density_profile.density_file, "r") as f:
             data = json.load(f)
         # Choose the day to be used from the configuration
-        data_day = data[str(self.config.density_profile.day_idx)]
-        # Get the height, temperature and density
-        height = np.array(data_day["altitude"]) * km
-        temp = np.array(data_day["T"])
-        density = np.array(data_day["density"])
+        data_day = np.array(data[str(self.config.density_profile.day_idx)])
+        # Get the height (First column), temperature (Second column) and density (Last column)
+        height = data_day[:, 0] * km
+        temp = data_day[:, 1]
+        density = data_day[:, 2]
         # Interpolate the density and temperature to the height of the atmosphere
         inter_height = np.linspace(0, self.atmosphere_height, self.density_points)
         density = np.interp(inter_height, height, density)
