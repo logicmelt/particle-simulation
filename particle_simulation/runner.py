@@ -1,5 +1,6 @@
 import pathlib
 import multiprocessing
+import warnings
 import pandas as pd
 
 from particle_simulation import config
@@ -62,7 +63,12 @@ class SimRunner:
             "pz": "pz[MeV]",
         }
 
-    def run(self) -> None:
+    def run(self) -> pathlib.Path:
+        """ Run the simulation.
+        
+        Returns:
+            pathlib.Path: The path to the output file.
+        """
         # Run the simulation in parallel if the number of processes is greater than 1
         if self.num_processes == 1:
             self.simulation(1)
@@ -76,7 +82,8 @@ class SimRunner:
         if (
             len(output_files) == 0
         ):  # No files were generated so no particles reached the sensitive detectors
-            raise Warning("No particles were generated with the given configuration")
+            warnings.warn("No particles were generated with the given configuration")
+            return pathlib.Path("")
 
         data = pd.concat(
             [
@@ -92,6 +99,8 @@ class SimRunner:
         # Remove the individual files
         for file_x in output_files:
             file_x.unlink()
+
+        return self.save_dir/"output.csv"
 
     def simulation(self, process_num: int) -> int:
         # Create a logger
