@@ -42,4 +42,4 @@ ADD additional_files /app/additional_files
 ADD particle_simulation /app/particle_simulation
 
 # Run the simulation as an entry point
-CMD ["poetry", "run", "python", "-m", "particle_simulation", "--config_file", "additional_files/simulation_config.yaml"]
+CMD ["poetry", "run", "python", "-m", "particle_simulation.icos_sim", "--config_file", "additional_files/simulation_config.yaml", "--sim_cycles", "-1"]
