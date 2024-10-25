@@ -30,12 +30,13 @@ def postprocess(output_paths: list[pathlib.Path]) -> list[int]:
     
     return muon_count
 
-def main(config_pyd: Config, sim_cycles: int) -> None:
+def main(config_pyd: Config, sim_cycles: int, time_resolution: int) -> None:
     """Main function to run the simulation.
     
     Args:
         config_pyd (Config): Configuration settings.
         sim_cycles (int): Number of times the simulation should be run. Set -1 for continuous simulation.
+        time_resolution (int): Time resolution of the simulation in seconds.
     """
     # Get the current save directory for later use
     current_save_dir = config_pyd.save_dir
@@ -78,6 +79,12 @@ if __name__ == "__main__":
         help="Times the simulation should be run. Defaults to -1 (Continuous)",
         default=-1,
     )
+    parser.add_argument(
+        "--time_resolution",
+        type = int,
+        help = "Time resolution of the simulation in seconds",
+        default = 1
+    )
 
     # Parse command line arguments and the unknown arguments
     args, unknown = parser.parse_known_args()
@@ -94,4 +101,4 @@ if __name__ == "__main__":
         config_parser = Config(**load_config(args.config_file))
 
     # Call the main function
-    main(config_parser, args.sim_cycles)
+    main(config_parser, args.sim_cycles, args.time_resolution)
