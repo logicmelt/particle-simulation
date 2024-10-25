@@ -2,6 +2,7 @@ import pathlib
 import multiprocessing
 import warnings
 import pandas as pd
+import contextlib
 
 from particle_simulation import config
 
@@ -70,12 +71,13 @@ class SimRunner:
             pathlib.Path: The path to the output file.
         """
         # Run the simulation in parallel if the number of processes is greater than 1
-        if self.num_processes == 1:
-            self.simulation(1)
-        else:
-            list_processes = iter(range(1, self.num_processes + 1))
-            with multiprocessing.Pool(self.num_processes) as pool:
-                pool.map(self.simulation, list_processes)
+        with contextlib.redirect_stdout(None): # Suppress the output of the simulation
+            if self.num_processes == 1:
+                self.simulation(1)
+            else:
+                list_processes = iter(range(1, self.num_processes + 1))
+                with multiprocessing.Pool(self.num_processes) as pool:
+                    pool.map(self.simulation, list_processes)
 
         # Now, we need to merge the output files into a single one
         output_files = [p for p in self.save_dir.rglob("*.csv")]
