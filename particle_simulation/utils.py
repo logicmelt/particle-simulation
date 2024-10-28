@@ -18,11 +18,11 @@ LOGGER_LEVEL: dict[str, int] = {
 }
 
 
-def load_config(config_file: str) -> dict[str, Any]:
+def load_config(config_file: str | pathlib.Path) -> dict[str, Any]:
     """Loads a configuration file in YAML or JSON format.
 
     Args:
-        config_file (str): The path to the configuration file.
+        config_file (str | pathlib.Path): The path to the configuration file.
 
     Returns:
         dict[str, Any]: The configuration file read as a dictionary.

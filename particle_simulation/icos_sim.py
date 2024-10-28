@@ -6,6 +6,8 @@ import sys
 import pathlib
 import pandas as pd
 import matplotlib.pyplot as plt
+import shutil
+
 
 def postprocess(output_paths: list[pathlib.Path]) -> list[int]:
     """
@@ -27,12 +29,13 @@ def postprocess(output_paths: list[pathlib.Path]) -> list[int]:
         # Get the number of muons
         num_muons = len(dataframe[dataframe["Particle"] == "mu-"])
         muon_count.append(num_muons)
-    
+
     return muon_count
+
 
 def main(config_pyd: Config, sim_cycles: int, time_resolution: int) -> None:
     """Main function to run the simulation.
-    
+
     Args:
         config_pyd (Config): Configuration settings.
         sim_cycles (int): Number of times the simulation should be run. Set -1 for continuous simulation.
@@ -40,12 +43,20 @@ def main(config_pyd: Config, sim_cycles: int, time_resolution: int) -> None:
     """
     # Get the current save directory for later use
     current_save_dir = config_pyd.save_dir
+
+    # Check if there is a restart file
+    if (current_save_dir / "last_config.json").is_file():
+        print("Restart file found.")
+        # Load the configuration file
+        config_pyd = Config(**load_config(current_save_dir / "last_config.json"))
+
     # List to store the path to the output files
     output_paths: list[pathlib.Path] = []
 
     # If sim_cycles is -1, the simulation will run continuously
     # Simulation is ran as many times as specified in sim_cycles
     try:
+        print("Running simulation...")
         while sim_cycles != 0:
             # Create the simulation runner
             runner = SimRunner(config_pyd)
@@ -59,12 +70,28 @@ def main(config_pyd: Config, sim_cycles: int, time_resolution: int) -> None:
             sim_cycles -= 1
     except KeyboardInterrupt:
         print("Simulation interrupted by the user.")
-    
-    # Postprocess the output files to get the timeseries of muons 
+        print("Writing restart file...")
+        # Get the last folder created
+        last_folder = max(current_save_dir.iterdir(), key=lambda x: x.stat().st_ctime)
+        # Save the current state of the simulation
+        config_pyd.save_dir = current_save_dir
+        with open(current_save_dir / "last_config.json", "w") as f:
+            f.write(config_pyd.model_dump_json(indent=4))
+        # Remove the unfinished simulation (The last folder created is the one that was not finished)
+        if len(output_paths) == 0:
+            print("No output files were generated.")
+            # Delete everything in the folder
+            shutil.rmtree(current_save_dir / last_folder.name)
+            return
+        # Delete everything in the last folder
+        shutil.rmtree(current_save_dir / last_folder.name)
+
+    # Postprocess the output files to get the timeseries of muons
     muon_time = postprocess(output_paths)
     # Plot the timeseries
     plt.plot(muon_time)
     plt.show()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -81,9 +108,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--time_resolution",
-        type = int,
-        help = "Time resolution of the simulation in seconds",
-        default = 1
+        type=int,
+        help="Time resolution of the simulation in seconds",
+        default=1,
     )
 
     # Parse command line arguments and the unknown arguments

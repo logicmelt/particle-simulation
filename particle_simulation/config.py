@@ -162,7 +162,6 @@ class MagneticFieldConfig(BaseSettings):
         description="Date to get the magnetic field values. Format YYYY-MM-DD.",
     )
 
-    @computed_field
     @property
     def decimal_year(self) -> float:
         """Return the decimal year from a date in format YYYY-MM-DD."""

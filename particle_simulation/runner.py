@@ -54,6 +54,9 @@ class SimRunner:
             "x",
             "y",
             "z",
+            "theta[rad]",
+            "phi[rad]",
+            "time[s]",
         ]
         self.new_header = {
             "x": "x[mm]",
@@ -89,7 +92,7 @@ class SimRunner:
 
         data = pd.concat(
             [
-                pd.read_csv(file_x, skiprows=15, names=self.header)
+                pd.read_csv(file_x, skiprows=18, names=self.header)
                 for file_x in output_files
             ],
             ignore_index=True,

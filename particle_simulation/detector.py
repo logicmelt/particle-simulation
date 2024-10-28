@@ -5,8 +5,11 @@ from geant4_pybind import (
     G4AnalysisManager,
     G4RunManager,
     fStopAndKill,
+    rad,
+    second,
 )
 from particle_simulation.config import ConstructorConfig
+import numpy as np
 import logging
 
 
@@ -70,6 +73,18 @@ class SensDetector(G4VSensitiveDetector):
         momentum = arg0.GetPreStepPoint().GetMomentum()
         position = arg0.GetPreStepPoint().GetPosition()
 
+        # The time since the beginning of the EVENT in SECONDS
+        global_time = arg0.GetPreStepPoint().GetGlobalTime() / second
+
+        # Estimate the angles
+        touchable = arg0.GetPreStepPoint().GetTouchable()
+        mom_dir = arg0.GetPreStepPoint().GetMomentumDirection()
+        local_position = touchable.GetHistory().GetTopTransform().TransformPoint(position)
+        theta = mom_dir.getTheta() / rad
+        phi = mom_dir.getPhi() / rad
+
+        self.logger.debug(f"Theta: {theta} Phi: {phi} Position: {position} Local_position: {local_position} Mom_dir: {mom_dir}")
+
         # If the particle has reached the ground level, stop the track
         # Otherwise we might have double counting of particles
         z_pos = position.z - self.correction_factor
@@ -88,6 +103,7 @@ class SensDetector(G4VSensitiveDetector):
         analysisManager.FillNtupleDColumn(8, position.x)
         analysisManager.FillNtupleDColumn(9, position.y)
         analysisManager.FillNtupleDColumn(10, position.z - self.correction_factor)
+        analysisManager.FillNtupleDColumn(13, global_time)
 
         # Add to the Ntuple
         analysisManager.AddNtupleRow(0)
