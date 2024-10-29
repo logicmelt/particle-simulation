@@ -68,13 +68,13 @@ class SimRunner:
         }
 
     def run(self) -> pathlib.Path:
-        """ Run the simulation.
-        
+        """Run the simulation.
+
         Returns:
             pathlib.Path: The path to the output file.
         """
         # Run the simulation in parallel if the number of processes is greater than 1
-        with contextlib.redirect_stdout(None): # Suppress the output of the simulation
+        with contextlib.redirect_stdout(None):  # Suppress the output of the simulation
             if self.num_processes == 1:
                 self.simulation(1)
             else:
@@ -105,7 +105,7 @@ class SimRunner:
         for file_x in output_files:
             file_x.unlink()
 
-        return self.save_dir/"output.csv"
+        return self.save_dir / "output.csv"
 
     def simulation(self, process_num: int) -> int:
         # Create a logger

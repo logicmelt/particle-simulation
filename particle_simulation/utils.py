@@ -38,6 +38,17 @@ def load_config(config_file: str | pathlib.Path) -> dict[str, Any]:
         raise ValueError("The configuration file must be in JSON or YAML format.")
     return config
 
+def extract_latitude_longitude(path_csv: str | pathlib.Path) -> tuple[float, float]:
+    """Extracts the latitude and longitude from a CSV file.
+
+    Args:
+        path_csv (str | pathlib.Path): Path to the CSV file.
+
+    Returns:
+        tuple[float, float]: Latitude and longitude.
+    """
+    df = pd.read_csv(path_csv)
+    return df["latitude"].values[0], df["longitude"].values[0]
 
 def create_logger(
     name: str, log_file: str | pathlib.Path, level: str = "INFO"

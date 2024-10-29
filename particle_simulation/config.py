@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, model_validator, StringConstraints, computed_field
+from pydantic import Field, model_validator, StringConstraints
 from typing import Annotated
 import pathlib
 import time
@@ -157,15 +157,16 @@ class MagneticFieldConfig(BaseSettings):
         description="Longitude of the detector in decimal degrees (World Geodetic System 1984)."
         "Positive east of the prime meridian (default: -8.716).",
     )
-    mag_time: datetime.date = Field(
-        default=datetime.date(2021, 1, 1),
-        description="Date to get the magnetic field values. Format YYYY-MM-DD.",
+    mag_time: datetime.datetime = Field(
+        default=datetime.datetime(2021, 1, 1),
+        description="Date to get the magnetic field values. Format YYYY-MM-DDTHH:MM:SS.",
     )
 
     @property
     def decimal_year(self) -> float:
         """Return the decimal year from a date in format YYYY-MM-DD."""
-        return self.transform_to_decimal_year(self.mag_time)
+        # Precision of days so we use only the date
+        return self.transform_to_decimal_year(self.mag_time.date())
 
     def transform_to_decimal_year(self, date: datetime.date) -> float:
         """Return the decimal year from a date in format YYYY-MM-DD.

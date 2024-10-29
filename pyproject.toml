@@ -16,6 +16,7 @@ requests = "^2.32.3"
 pydantic = "^2.9.2"
 pydantic-settings = "^2.5.2"
 pygeomag = "^1.0.2"
+scipy = "^1.14.1"
 
 
 [tool.poetry.group.dev.dependencies]

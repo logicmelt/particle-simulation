@@ -77,13 +77,16 @@ class SensDetector(G4VSensitiveDetector):
         global_time = arg0.GetPreStepPoint().GetGlobalTime() / second
 
         # Estimate the angles
-        touchable = arg0.GetPreStepPoint().GetTouchable()
         mom_dir = arg0.GetPreStepPoint().GetMomentumDirection()
-        local_position = touchable.GetHistory().GetTopTransform().TransformPoint(position)
+        # If the particle is going down, flip the momentum direction
+        # This is needed because otherwise the zenith angle will be estimated
+        # assuming a point below the surface (Vector is pointing down and the normal to the surface is up)
+        if mom_dir.z < 0:
+            mom_dir.x, mom_dir.y, mom_dir.z = -mom_dir.x, -mom_dir.y, -mom_dir.z
+        # Zenith angle
         theta = mom_dir.getTheta() / rad
+        # Azimuthal angle
         phi = mom_dir.getPhi() / rad
-
-        self.logger.debug(f"Theta: {theta} Phi: {phi} Position: {position} Local_position: {local_position} Mom_dir: {mom_dir}")
 
         # If the particle has reached the ground level, stop the track
         # Otherwise we might have double counting of particles
@@ -103,6 +106,8 @@ class SensDetector(G4VSensitiveDetector):
         analysisManager.FillNtupleDColumn(8, position.x)
         analysisManager.FillNtupleDColumn(9, position.y)
         analysisManager.FillNtupleDColumn(10, position.z - self.correction_factor)
+        analysisManager.FillNtupleDColumn(11, theta)
+        analysisManager.FillNtupleDColumn(12, phi)
         analysisManager.FillNtupleDColumn(13, global_time)
 
         # Add to the Ntuple
