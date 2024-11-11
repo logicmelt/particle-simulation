@@ -109,7 +109,7 @@ class ResultsIcos(BaseModel):
         output_data["variance_azimuth"] = data[0]["phi[rad]"].var()
 
         # Get the skewness of the zenith and azimuth
-        # Use these instead of pandas skewness because here we can control more the parameters
+        # Use these instead of pandas skewness because here we can control better the parameters
         # In fact, by default the results are not the same, all the pandas estimations are automatically
         # corrected for statistical bias whereas scipy.stats.skew is not (unless you specify the bias=False)
         output_data["skewness_zenith"] = scipy.stats.skew(data[0]["theta[rad]"])
