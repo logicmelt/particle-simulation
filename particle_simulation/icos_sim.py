@@ -10,6 +10,8 @@ import pandas as pd
 import shutil
 import datetime
 
+#TODO: Add support to no particles reaching the ground. Right now this situation is skipped 
+# but it should add a 0 to the muon_time list as it is a valid result.
 
 def postprocess(
     output_paths: list[pathlib.Path],
