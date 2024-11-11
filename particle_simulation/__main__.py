@@ -1,6 +1,7 @@
 from particle_simulation.runner import SimRunner
 from particle_simulation.config import Config
 from particle_simulation.utils import load_config
+from pydantic_settings import CliSettingsSource
 import argparse
 import sys
 
@@ -20,6 +21,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config_file", type=str, help="Configuration yaml file", default=""
     )
+
+    # Connect the CliSettingsSource to the argparser so that the --help message is generated correctly.
+    cli_settings = CliSettingsSource(Config, root_parser= parser)
+
     # Parse command line arguments and the unknown arguments
     args, unknown = parser.parse_known_args()
     # Remove --config_file from the list of arguments

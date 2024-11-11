@@ -16,10 +16,8 @@ from geant4_pybind import (
 )
 from particle_simulation.generator import GPSGenerator, ParticleGunGenerator
 from particle_simulation.config import Config
-from typing import Any
 
 import logging
-import pathlib
 
 GENERATORS = {"gps": GPSGenerator, "particle_gun": ParticleGunGenerator}
 
@@ -114,6 +112,13 @@ class RunAct(G4UserRunAction):
         analysisManager.CreateNtupleDColumn("x[mm]")
         analysisManager.CreateNtupleDColumn("y[mm]")
         analysisManager.CreateNtupleDColumn("z[mm]")
+
+        # Angles of the particles
+        analysisManager.CreateNtupleDColumn("theta[rad]")
+        analysisManager.CreateNtupleDColumn("phi[rad]")
+
+        # Event start time
+        analysisManager.CreateNtupleDColumn("time[s]")
 
         # Create 1d Histogram for the energy spectrum
         # ih = analysisManager.CreateH1("0", "energy spectrum dN/dE = f(E)", 1000, 400, 340000)

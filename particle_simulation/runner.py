@@ -2,6 +2,7 @@ import pathlib
 import multiprocessing
 import warnings
 import pandas as pd
+import contextlib
 
 from particle_simulation import config
 
@@ -53,6 +54,9 @@ class SimRunner:
             "x",
             "y",
             "z",
+            "theta[rad]",
+            "phi[rad]",
+            "time[s]",
         ]
         self.new_header = {
             "x": "x[mm]",
@@ -64,18 +68,19 @@ class SimRunner:
         }
 
     def run(self) -> pathlib.Path:
-        """ Run the simulation.
-        
+        """Run the simulation.
+
         Returns:
             pathlib.Path: The path to the output file.
         """
         # Run the simulation in parallel if the number of processes is greater than 1
-        if self.num_processes == 1:
-            self.simulation(1)
-        else:
-            list_processes = iter(range(1, self.num_processes + 1))
-            with multiprocessing.Pool(self.num_processes) as pool:
-                pool.map(self.simulation, list_processes)
+        with contextlib.redirect_stdout(None):  # Suppress the output of the simulation
+            if self.num_processes == 1:
+                self.simulation(1)
+            else:
+                list_processes = iter(range(1, self.num_processes + 1))
+                with multiprocessing.Pool(self.num_processes) as pool:
+                    pool.map(self.simulation, list_processes)
 
         # Now, we need to merge the output files into a single one
         output_files = [p for p in self.save_dir.rglob("*.csv")]
@@ -87,7 +92,7 @@ class SimRunner:
 
         data = pd.concat(
             [
-                pd.read_csv(file_x, skiprows=15, names=self.header)
+                pd.read_csv(file_x, skiprows=18, names=self.header)
                 for file_x in output_files
             ],
             ignore_index=True,
@@ -100,7 +105,7 @@ class SimRunner:
         for file_x in output_files:
             file_x.unlink()
 
-        return self.save_dir/"output.csv"
+        return self.save_dir / "output.csv"
 
     def simulation(self, process_num: int) -> int:
         # Create a logger
