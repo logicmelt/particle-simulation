@@ -7,6 +7,7 @@ import yaml
 import pathlib
 import os
 import re
+import datetime
 from typing import Any
 
 LOGGER_LEVEL: dict[str, int] = {
@@ -38,17 +39,22 @@ def load_config(config_file: str | pathlib.Path) -> dict[str, Any]:
         raise ValueError("The configuration file must be in JSON or YAML format.")
     return config
 
-def extract_latitude_longitude(path_csv: str | pathlib.Path) -> tuple[float, float]:
+
+def extract_latitude_longitude(
+    path_csv: str | pathlib.Path,
+) -> tuple[float, float, datetime.datetime]:
     """Extracts the latitude and longitude from a CSV file.
 
     Args:
         path_csv (str | pathlib.Path): Path to the CSV file.
 
     Returns:
-        tuple[float, float]: Latitude and longitude.
+        tuple[float, float]: Latitude, longitude and the date.
     """
     df = pd.read_csv(path_csv)
-    return df["latitude"].values[0], df["longitude"].values[0]
+    date_val = datetime.datetime.strptime(df["date"].values[0], "%Y-%m-%d")
+    return df["latitude"].values[0], df["longitude"].values[0], date_val
+
 
 def create_logger(
     name: str, log_file: str | pathlib.Path, level: str = "INFO"

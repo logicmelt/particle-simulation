@@ -96,6 +96,21 @@ class ResultsIcos(BaseModel):
         output_data["detector_location"] = DetectorLoc(
             latitude=data[1][2], longitude=data[1][3]
         )
+        # If the dataframe is empty then everything is zero
+        if data[0].empty:
+            output_data["n_readings"] = 0
+            output_data["detector_type"] = "virtual"
+            output_data["mean_zenith"] = 0.0
+            output_data["mean_azimuth"] = 0.0
+            output_data["variance_zenith"] = 0.0
+            output_data["variance_azimuth"] = 0.0
+            output_data["skewness_zenith"] = 0.0
+            output_data["skewness_azimuth"] = 0.0
+            output_data["kurtosis_zenith"] = 0.0
+            output_data["kurtosis_azimuth"] = 0.0
+            output_data["relative_time"] = 0.0
+            output_data["multiplicity"] = 0.0
+            return output_data
 
         output_data["n_readings"] = len(data[0]["ParticleID"])
         output_data["detector_type"] = "virtual"

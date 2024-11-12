@@ -10,8 +10,6 @@ import pandas as pd
 import shutil
 import datetime
 
-#TODO: Add support to no particles reaching the ground. Right now this situation is skipped 
-# but it should add a 0 to the muon_time list as it is a valid result.
 
 def postprocess(
     output_paths: list[pathlib.Path],
@@ -29,15 +27,20 @@ def postprocess(
     muon_count: list[int] = []
     # Each file corresponds to 1s of simulation
     for idx, path in enumerate(output_paths):
+        if not path.is_file():
+            parsed_results = ResultsIcos.model_validate(
+                (pd.DataFrame(), output_extra[idx])
+            )
+            continue
         dataframe = pd.read_csv(path)
         parsed_results = ResultsIcos.model_validate((dataframe, output_extra[idx]))
-
     return muon_count
 
 
 def main(
     config_pyd: Config,
     sim_cycles: int,
+    time_resolution: int,
     restart_checkpoint: bool = True,
 ) -> None:
     """Main function to run the simulation.
@@ -45,6 +48,7 @@ def main(
     Args:
         config_pyd (Config): Configuration settings.
         sim_cycles (int): Number of times the simulation should be run. Set -1 for continuous simulation.
+        time_resolution (int): Number of seconds covered by one simulation.
         restart_checkpoint (bool, optional): Restart the simulation from the last configuration file. Defaults to True.
     """
     # Get the current save directory for later use
@@ -58,12 +62,15 @@ def main(
 
     # The longitude and latitude can be provided in the configuration file or in a separate file
     if config_pyd.constructor.magnetic_field.mag_source == "file":
-        latitude, longitude = extract_latitude_longitude(
+        latitude, longitude, date_mag = extract_latitude_longitude(
             config_pyd.constructor.magnetic_field.mag_file
         )
+        start_time = date_mag
+        config_pyd.constructor.magnetic_field.mag_time = start_time
     else:
         longitude = config_pyd.constructor.magnetic_field.longitude
         latitude = config_pyd.constructor.magnetic_field.latitude
+        start_time = config_pyd.constructor.magnetic_field.mag_time
 
     # List to store the path to the output files
     output_paths: list[pathlib.Path] = []
@@ -80,21 +87,11 @@ def main(
             runner = SimRunner(config_pyd)
             # Run the simulation
             file_path = runner.run()
-            if not file_path.is_file():
-                # No particles reached the sensitive detectors for this simulation. That means no csv filee
-                config_pyd.random_seed += config_pyd.num_processes + 10
-                config_pyd.save_dir = current_save_dir
-                # Update the time to the new start time
-                config_pyd.constructor.magnetic_field.mag_time += datetime.timedelta(
-                    seconds=1
-                )
-                sim_cycles -= 1
-                continue
             output_paths.append(file_path)
             # End time will be the current start time plus one second
             end_time = (
                 config_pyd.constructor.magnetic_field.mag_time
-                + datetime.timedelta(seconds=1)
+                + datetime.timedelta(seconds=time_resolution)
             )
             # Append to the output_extra list
             output_extra.append(
@@ -111,6 +108,10 @@ def main(
             config_pyd.random_seed += config_pyd.num_processes + 10
             # Update the time to the new start time
             config_pyd.constructor.magnetic_field.mag_time = end_time
+            # Change the day for the density profile if the simulation is running for more than 24 hours
+            if end_time.day != start_time.day:
+                config_pyd.constructor.density_profile.day_idx += 1
+                start_time += datetime.timedelta(days=1)
             sim_cycles -= 1
     except KeyboardInterrupt:
         print("Simulation interrupted by the user.")
@@ -149,8 +150,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--restart",
         action="store_true",
-        default=True,
         help="Restart the simulation from the last configuration file.",
+    )
+    parser.add_argument(
+        "--time_resolution",
+        type=int,
+        help="Number of seconds covered by one simulation. Defaults to 1 second.",
+        default=1,
     )
 
     # Connect the CliSettingsSource to the argparser so that the --help message is generated correctly.
@@ -171,4 +177,4 @@ if __name__ == "__main__":
         config_parser = Config(**load_config(args.config_file))
 
     # Call the main function
-    main(config_parser, args.sim_cycles, args.restart)
+    main(config_parser, args.sim_cycles, args.time_resolution, args.restart)
