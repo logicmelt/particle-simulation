@@ -31,14 +31,14 @@ runner.run()
 Via CLI we have three options:
 - Use a configuration file 
 ```bash
-python particle_simulation --config_file additional_files/simulation_config.yaml
+particle_sim --config_file additional_files/simulation_config.yaml
 ```
 - Set up the simulation using command line parameters
 ```bash
-python particle_simulation --random_seed 42 --constructor.sensitive_detectors.enabled True
+particle_sim --random_seed 42 --constructor.sensitive_detectors.enabled True
 ```
 - A combination of both: Use a configuration file and override from command line parameters.
 ```bash
-python particle_simulation --config_file additional_files/simulation_config.yaml --random_seed 648 --constructor.sensitive_detectors.enabled False
+particle_sim --config_file additional_files/simulation_config.yaml --random_seed 648 --constructor.sensitive_detectors.enabled False
 ```
 Within the save directory the log and results (as .csv) will be stored alongisde the configuration file as json. 

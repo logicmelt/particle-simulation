@@ -141,6 +141,7 @@ class MagneticFieldConfig(BaseSettings):
         description=(
             "File containing the magnetic field as a csv with 7 columns:"
             "Bx, By, Bz, altitude, latitude, longitude and date"
+            "Or a txt file with paths to the csv files, the start time and ent time of each file"
         ),
     )
     latitude: float = Field(
@@ -282,9 +283,14 @@ class Config(BaseSettings):
             ), f"GDML File {self.constructor.gdml_file} not found"
 
         if self.constructor.magnetic_field.mag_source == "file":
-            assert (
-                self.constructor.magnetic_field.mag_file.is_file()
-            ), f"Magnetic field file {self.constructor.magnetic_field.mag_file} not found"
+            if self.constructor.magnetic_field.mag_file.suffix == ".csv":
+                assert (
+                    self.constructor.magnetic_field.mag_file.is_file()
+                ), f"Magnetic field file {self.constructor.magnetic_field.mag_file} not found"
+            elif self.constructor.magnetic_field.mag_file.suffix == ".txt":
+                assert (
+                    self.constructor.magnetic_field.mag_file.is_file()
+                ), f"List of magnetic fields files {self.constructor.magnetic_field.mag_file} not found"
 
         assert (
             self.constructor.density_profile.density_file.is_file()

@@ -18,6 +18,9 @@ pydantic-settings = "^2.5.2"
 pygeomag = "^1.0.2"
 scipy = "^1.14.1"
 
+[tool.poetry.scripts]
+icos_sim = "particle_simulation.icos_sim:cli_entrypoint"
+particle_sim = "particle_simulation.__main__:cli_entrypoint"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.8"

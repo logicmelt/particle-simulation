@@ -51,6 +51,13 @@ def extract_latitude_longitude(
     Returns:
         tuple[float, float]: Latitude, longitude and the date.
     """
+    path_csv = pathlib.Path(path_csv) if isinstance(path_csv, str) else path_csv
+    # Check if the file is a csv file or a txt file
+    if path_csv.suffix == ".txt":
+        # If it's a txt then we need to read the first line to get one random csv file
+        with open(path_csv, "r") as f:
+            line = f.readline().split(" ")[0]
+        path_csv = path_csv.parent / line
     df = pd.read_csv(path_csv)
     date_val = datetime.datetime.strptime(df["date"].values[0], "%Y-%m-%d")
     return df["latitude"].values[0], df["longitude"].values[0], date_val

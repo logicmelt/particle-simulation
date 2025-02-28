@@ -255,13 +255,30 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                     time=mag_config.decimal_year,
                 )
                 # Change to -z because the magnetic field is defined positive towards the center of the earth
+                assert result.z is not None
                 mag_field[i] = (
                     np.array([result.x, result.y, -result.z]) * 1e-9
                 )  # nT to Tesla
             return mag_field
         else:
             self.logger.info(f"Reading the magnetic field from {mag_config.mag_file}")
-            open_csv = pd.read_csv(mag_config.mag_file)
+            # If the file is a txt then it contains the paths to the csv files + the times
+            if mag_config.mag_file.suffix == ".txt":
+                # Open the txt file: two columns
+                file_paths, st_times, end_times = np.loadtxt(mag_config.mag_file, unpack=True, dtype=str)
+                # Transform the times to datetime objects
+                st_times = pd.to_datetime(st_times, format="%Y-%m-%dT%H:%M:%S.%f")
+                end_times = pd.to_datetime(end_times, format="%Y-%m-%dT%H:%M:%S.%f")
+                # Search for the file that corresponds to the date by checking if the date is between the start and end times
+                mag_start_time = mag_config.mag_time
+                file_pos = np.where((mag_start_time >= st_times) & (mag_start_time < end_times))[0]
+                if len(file_pos) == 0:
+                    raise ValueError("The date is not in the range of the provided magnetic field files.")
+                csv_fil = mag_config.mag_file.parent / file_paths[file_pos[0]]
+                self.logger.info(f"Reading from csv file: {csv_fil}")
+            else:
+                csv_fil = mag_config.mag_file
+            open_csv = pd.read_csv(csv_fil)
             # Transforms the values from nT to Tesla
             open_csv[["x", "y", "z"]] = open_csv[["x", "y", "z"]] * 1e-9
             # And the km column using the geant4 System of units

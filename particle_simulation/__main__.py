@@ -14,7 +14,7 @@ def main(config_pyd: Config) -> None:
     runner.run()
 
 
-if __name__ == "__main__":
+def cli_entrypoint() -> None:
     parser = argparse.ArgumentParser(
         description="Particle simulation of a cosmic shower using Geant4 and Python."
     )
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     )
 
     # Connect the CliSettingsSource to the argparser so that the --help message is generated correctly.
-    cli_settings = CliSettingsSource(Config, root_parser= parser)
+    cli_settings = CliSettingsSource(Config, root_parser=parser)
 
     # Parse command line arguments and the unknown arguments
     args, unknown = parser.parse_known_args()
@@ -41,3 +41,7 @@ if __name__ == "__main__":
 
     # Call the main function
     main(config_parser)
+
+
+if __name__ == "__main__":
+    cli_entrypoint()

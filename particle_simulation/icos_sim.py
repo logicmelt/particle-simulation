@@ -67,6 +67,8 @@ def main(
         )
         start_time = date_mag
         config_pyd.constructor.magnetic_field.mag_time = start_time
+        config_pyd.constructor.magnetic_field.latitude = latitude
+        config_pyd.constructor.magnetic_field.longitude = longitude
     else:
         longitude = config_pyd.constructor.magnetic_field.longitude
         latitude = config_pyd.constructor.magnetic_field.latitude
@@ -82,13 +84,13 @@ def main(
         print("Running simulation...")
         while sim_cycles != 0:
             if sim_cycles % 10 == 0:
-                print(f"Starting simulation: {sim_cycles}")
+                print(f"Starting simulation: {abs(sim_cycles)}")
             # Create the simulation runner
             runner = SimRunner(config_pyd)
             # Run the simulation
             file_path = runner.run()
             output_paths.append(file_path)
-            # End time will be the current start time plus one second
+            # End time will be the current start time plus time_resolution seconds
             end_time = (
                 config_pyd.constructor.magnetic_field.mag_time
                 + datetime.timedelta(seconds=time_resolution)
@@ -111,7 +113,8 @@ def main(
             # Change the day for the density profile if the simulation is running for more than 24 hours
             if end_time.day != start_time.day:
                 config_pyd.constructor.density_profile.day_idx += 1
-                start_time += datetime.timedelta(days=1)
+                day_diff = end_time.day - start_time.day
+                start_time += datetime.timedelta(days=day_diff)
             sim_cycles -= 1
     except KeyboardInterrupt:
         print("Simulation interrupted by the user.")
@@ -134,7 +137,7 @@ def main(
     muon_time = postprocess(output_paths, output_extra)
 
 
-if __name__ == "__main__":
+def cli_entrypoint() -> None:
     parser = argparse.ArgumentParser(
         description="Particle simulation of a cosmic shower using Geant4 and Python."
     )
@@ -178,3 +181,7 @@ if __name__ == "__main__":
 
     # Call the main function
     main(config_parser, args.sim_cycles, args.time_resolution, args.restart)
+
+
+if __name__ == "__main__":
+    cli_entrypoint()

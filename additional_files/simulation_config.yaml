@@ -23,12 +23,12 @@ constructor:
 
   magnetic_field: # Parameters for the magnetic field 
     enabled: True # Enable the magnetic field
-    mag_source: "estimated" # "estimated" or "file". If estimated the magnetic field will be calculated from the latitude, longitude and date
-    mag_file: "additional_files/data_files/mag_field_vigo.csv" # Path to the magnetic field file or "None" if no magnetic field is used
+    mag_source: "file" # "estimated" or "file". If estimated the magnetic field will be calculated from the latitude, longitude and date
+    mag_file: "/home/alexismenendez/Downloads/Draco/magnetic_fields_solar_storm/EBR20240511.txt" # Path to the magnetic field file or "None" if no magnetic field is used
                                                   # Units should be in nT
     latitude: 42.224 # Latitude of the detector in degrees
     longitude: -8.716 # Longitude of the detector in degrees
-    mag_time: "2024-10-10" # Date of the magnetic field in YYYY-MM-DD format.
+    mag_time: "2024-05-11T00:00:00" # Datetime of the magnetic field in YYYY-MM-DDTHH:MM:SS format.
                             
   sensitive_detectors:
     enabled: True # Enable the sensitive detectors
