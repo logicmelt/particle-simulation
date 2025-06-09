@@ -14,26 +14,38 @@ import datetime
 def postprocess(
     output_paths: list[pathlib.Path],
     output_extra: list[tuple[datetime.datetime, datetime.datetime, float, float]],
-) -> list[int]:
+    output_dir: pathlib.Path,
+    run_id: list[str],
+) -> list[ResultsIcos]:
     """
     Postprocess the output files and generate the timeseries of muons reaching the ground.
     Args:
         output_paths (list[pathlib.Path]): List of paths to the output files.
         output_extra (list[tuple[datetime.datetime, datetime.datetime, float, float]]): List of tuples with the start_time, end_time,
                     latitude and longitude of each simulation.
+        output_dir (pathlib.Path): Directory where the output files are saved.
+        run_id (list[str]): Identifier for the run, used to name the output files.
     Returns:
-        list[int]: List of muons reaching the ground per second.
+        list[ResultsIcos]: List of muons reaching the ground per second.
     """
-    muon_count: list[int] = []
+    muon_count: list[ResultsIcos] = []
     # Each file corresponds to 1s of simulation
     for idx, path in enumerate(output_paths):
+        output_file_path = output_dir / f"icos_output_{run_id[idx]}.json"
         if not path.is_file():
             parsed_results = ResultsIcos.model_validate(
                 (pd.DataFrame(), output_extra[idx])
             )
+            muon_count.append(parsed_results)
+            with open(output_file_path, "w") as f:
+                f.write(parsed_results.model_dump_json(indent=4))
             continue
         dataframe = pd.read_csv(path)
         parsed_results = ResultsIcos.model_validate((dataframe, output_extra[idx]))
+        # Save the output file in the output directory
+        with open(output_file_path, "w") as f:
+            f.write(parsed_results.model_dump_json(indent=4))
+        muon_count.append(parsed_results)
     return muon_count
 
 
@@ -60,6 +72,11 @@ def main(
         # Load the configuration file
         config_pyd = Config(**load_config(current_save_dir / "last_config.json"))
 
+    # Create the output directory
+    if not (current_save_dir / "output_jsons").exists():
+        (current_save_dir / "output_jsons").mkdir(parents=True, exist_ok=True)
+    output_dir = current_save_dir / "output_jsons"
+
     # The longitude and latitude can be provided in the configuration file or in a separate file
     if config_pyd.constructor.magnetic_field.mag_source == "file":
         latitude, longitude, date_mag = extract_latitude_longitude(
@@ -78,6 +95,8 @@ def main(
     output_paths: list[pathlib.Path] = []
     # List to store the start_time, end_time, latitude and longitude of each simulation
     output_extra: list[tuple[datetime.datetime, datetime.datetime, float, float]] = []
+    # Save the run_id to identify the output files
+    run_id: list[str] = []
     # If sim_cycles is -1, the simulation will run continuously
     # Simulation is ran as many times as specified in sim_cycles
     try:
@@ -87,6 +106,7 @@ def main(
                 print(f"Starting simulation: {abs(sim_cycles)}")
             # Create the simulation runner
             runner = SimRunner(config_pyd)
+            run_id.append(str(runner.save_dir.name))
             # Run the simulation
             file_path = runner.run()
             output_paths.append(file_path)
@@ -115,6 +135,13 @@ def main(
                 config_pyd.constructor.density_profile.day_idx += 1
                 day_diff = end_time.day - start_time.day
                 start_time += datetime.timedelta(days=day_diff)
+            # Postprocess the output files to get the timeseries of muons and save the results
+            postprocess(output_paths, output_extra, output_dir, run_id)
+            output_paths, output_extra, run_id = (
+                [],
+                [],
+                [],
+            )  # Reset the output paths and extra data for the next cycle
             sim_cycles -= 1
     except KeyboardInterrupt:
         print("Simulation interrupted by the user.")
@@ -133,8 +160,6 @@ def main(
             return
         # Delete everything in the last folder
         shutil.rmtree(current_save_dir / last_folder.name)
-    # Postprocess the output files to get the timeseries of muons
-    muon_time = postprocess(output_paths, output_extra)
 
 
 def cli_entrypoint() -> None:

@@ -1,9 +1,9 @@
-save_dir: "test_data/test" # Directory where the output files will be saved
+save_dir: "test_data/test_icos" # Directory where the output files will be saved
 random_seed: 42 # Seed for the random number generator
 num_processes: 10 # Number of processes to be used in the simulation
 macro_files: ["additional_files/macro_files/gps_flat_truncated.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
-particles_per_run: 20 # Number of particles to be generated per run
+particles_per_run: 2400 # Number of particles to be generated per run
 
 # Particle generator
 generator:
@@ -23,8 +23,8 @@ constructor:
 
   magnetic_field: # Parameters for the magnetic field 
     enabled: True # Enable the magnetic field
-    mag_source: "file" # "estimated" or "file". If estimated the magnetic field will be calculated from the latitude, longitude and date
-    mag_file: "/home/alexismenendez/Downloads/Draco/magnetic_fields_solar_storm/EBR20240511.txt" # Path to the magnetic field file or "None" if no magnetic field is used
+    mag_source: "estimated" # "estimated" or "file". If estimated the magnetic field will be calculated from the latitude, longitude and date
+    mag_file: "" # Path to the magnetic field file or "None" if no magnetic field is used
                                                   # Units should be in nT
     latitude: 42.224 # Latitude of the detector in degrees
     longitude: -8.716 # Longitude of the detector in degrees
@@ -33,7 +33,7 @@ constructor:
   sensitive_detectors:
     enabled: True # Enable the sensitive detectors
     altitude: [0] # Altitude of the sensitive detectors in km
-    particles: ["mu-", "chargedgeantino", "geantino"] # List of particles that will be recorded in the sensitive detectors. 
+    particles: ["mu-"] # List of particles that will be recorded in the sensitive detectors. 
                                                                       #"all" for all particles.
 
   # Parameters used to generate the custom geometry
