@@ -3,17 +3,19 @@ from particle_simulation.config import Config
 from particle_simulation.utils import load_config, extract_latitude_longitude
 from particle_simulation.results import ResultsIcos
 from pydantic_settings import CliSettingsSource
+from typing import Any
 import argparse
 import sys
 import pathlib
 import pandas as pd
 import shutil
 import datetime
+import json
 
 
 def postprocess(
     output_paths: list[pathlib.Path],
-    output_extra: list[tuple[datetime.datetime, datetime.datetime, float, float]],
+    output_extra: list[tuple[datetime.datetime, datetime.datetime, float, float, Any]],
     output_dir: pathlib.Path,
     run_id: list[str],
 ) -> list[ResultsIcos]:
@@ -22,7 +24,7 @@ def postprocess(
     Args:
         output_paths (list[pathlib.Path]): List of paths to the output files.
         output_extra (list[tuple[datetime.datetime, datetime.datetime, float, float]]): List of tuples with the start_time, end_time,
-                    latitude and longitude of each simulation.
+                    latitude, longitude and density profile of each simulation.
         output_dir (pathlib.Path): Directory where the output files are saved.
         run_id (list[str]): Identifier for the run, used to name the output files.
     Returns:
@@ -91,10 +93,15 @@ def main(
         latitude = config_pyd.constructor.magnetic_field.latitude
         start_time = config_pyd.constructor.magnetic_field.mag_time
 
+    # Open density profile file to store the Temperature, density and altitude used in the simulation
+    with open(config_pyd.constructor.density_profile.density_file, "r") as f:
+        density_profile = json.load(f)
     # List to store the path to the output files
     output_paths: list[pathlib.Path] = []
     # List to store the start_time, end_time, latitude and longitude of each simulation
-    output_extra: list[tuple[datetime.datetime, datetime.datetime, float, float]] = []
+    output_extra: list[
+        tuple[datetime.datetime, datetime.datetime, float, float, dict[str, Any]]
+    ] = []
     # Save the run_id to identify the output files
     run_id: list[str] = []
     # If sim_cycles is -1, the simulation will run continuously
@@ -122,8 +129,10 @@ def main(
                     end_time,
                     latitude,
                     longitude,
+                    density_profile[str(config_pyd.constructor.density_profile.day_idx)],
                 )
             )
+            
             # Update the save directory in the configuration (Otherwise the new sim will be run in the same directory)
             config_pyd.save_dir = current_save_dir
             # Update the random seed to get different results

@@ -69,6 +69,18 @@ class ResultsIcos(BaseModel):
         ...,
         description="Average of the time it took the particle to reach the detector since the start of the EVENT.",
     )
+    temperature: list[float] = Field(
+        ...,
+        description="List of temperatures at the detector location during the time interval.",
+    )
+    density: list[float] = Field(
+        ...,
+        description="List of densities at the detector location during the time interval.",
+    )
+    altitude: list[float] = Field(
+        ...,
+        description="List of altitudes where the temperatures and densities were measured.",
+    )
     n_readings: int = Field(..., description="Number of readings in the time interval.")
 
     @model_validator(mode="before")
@@ -76,14 +88,17 @@ class ResultsIcos(BaseModel):
     def create_data(
         cls,
         data: tuple[
-            pd.DataFrame, tuple[datetime.datetime, datetime.datetime, float, float]
+            pd.DataFrame,
+            tuple[
+                datetime.datetime, datetime.datetime, float, float, list[list[float]]
+            ],
         ],
     ) -> dict[str, Any]:
         """Parses the data from an output.csv file to a standard format.
 
         Args:
             data (tuple[pd.DataFrame, tuple[datetime.datetime, datetime.datetime, float, float]]): A tuple with both the data and
-                the extra information. The extra information is the start time, end time, latitude and longitude.
+                the extra information. The extra information is the start time, end time, latitude, longitude and altitude[km]/temperature[K]/density[kg/m3] data.
 
         Returns:
             dict[str, Any]: Data parsed to standardized format.
@@ -110,7 +125,22 @@ class ResultsIcos(BaseModel):
             output_data["kurtosis_azimuth"] = 0.0
             output_data["relative_time"] = 0.0
             output_data["multiplicity"] = 0.0
+            output_data["temperature"] = []
+            output_data["density"] = []
+            output_data["altitude"] = []
             return output_data
+
+        # Get the temperature, density and altitude
+        temperature = []
+        density = []
+        altitude = []
+        for item in data[1][-1]:
+            temperature.append(item[1])
+            density.append(item[2])
+            altitude.append(item[0])
+        output_data["temperature"] = temperature
+        output_data["density"] = density
+        output_data["altitude"] = altitude
 
         output_data["n_readings"] = len(data[0]["ParticleID"])
         output_data["detector_type"] = "virtual"

@@ -41,6 +41,7 @@ class SimRunner:
             f.write(self.config.model_dump_json(indent=4))
         # Get the number of processes
         self.num_processes = self.config.num_processes
+        # assert self.num_processes > 1, "The number of processes must be greater than 1 or geant4 will crash due to"
         # Create the header for the output file
         self.header = [
             "EventID",
@@ -73,14 +74,14 @@ class SimRunner:
         Returns:
             pathlib.Path: The path to the output file.
         """
-        # Run the simulation in parallel if the number of processes is greater than 1
+        # Run the simulation in parallel.
+        # This is used even for num_processes = 1 because Geant4 has trouble with the Manager being created twice
+        # in the main thread https://geant4-forum.web.cern.ch/t/problem-calling-twice-to-runmanger/1288.
+        # It's easier to just use multiprocessing.Pool
         with contextlib.redirect_stdout(None):  # Suppress the output of the simulation
-            if self.num_processes == 1:
-                self.simulation(1)
-            else:
-                list_processes = iter(range(1, self.num_processes + 1))
-                with multiprocessing.Pool(self.num_processes) as pool:
-                    pool.map(self.simulation, list_processes)
+            list_processes = iter(range(1, self.num_processes + 1))
+            with multiprocessing.Pool(self.num_processes) as pool:
+                pool.map(self.simulation, list_processes)
 
         # Now, we need to merge the output files into a single one
         output_files = [p for p in self.save_dir.rglob("*.csv")]
