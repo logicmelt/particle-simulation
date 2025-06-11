@@ -3,7 +3,7 @@ random_seed: 42 # Seed for the random number generator
 num_processes: 1 # Number of processes to be used in the simulation
 macro_files: ["additional_files/macro_files/gps_flat_truncated.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
-particles_per_run: 214286 # Number of particles to be generated per run
+particles_per_run: 18750 # Number of particles to be generated per run
 
 # Particle generator
 generator:
