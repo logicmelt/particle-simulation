@@ -1,7 +1,7 @@
 from particle_simulation.runner import SimRunner
 from particle_simulation.config import Config
 from particle_simulation.utils import load_config, extract_latitude_longitude
-from particle_simulation.results import ResultsIcos
+from particle_simulation.results import ResultsIcos, ResultsInflux
 from pydantic_settings import CliSettingsSource
 from typing import Any
 import argparse
@@ -15,22 +15,24 @@ import json
 
 def postprocess(
     output_paths: list[pathlib.Path],
-    output_extra: list[tuple[datetime.datetime, datetime.datetime, float, float, Any]],
+    output_extra: list[
+        tuple[datetime.datetime, datetime.datetime, float, float, int, Any]
+    ],
     output_dir: pathlib.Path,
     run_id: list[str],
-) -> list[ResultsIcos]:
+) -> list[ResultsIcos | ResultsInflux]:
     """
     Postprocess the output files and generate the timeseries of muons reaching the ground.
     Args:
         output_paths (list[pathlib.Path]): List of paths to the output files.
-        output_extra (list[tuple[datetime.datetime, datetime.datetime, float, float]]): List of tuples with the start_time, end_time,
-                    latitude, longitude and density profile of each simulation.
+        output_extra (list[tuple[datetime.datetime, datetime.datetime, float, float, int, Any]]): List of tuples with the start_time, end_time,
+                    latitude, longitude, density profile day idx and density profile of each simulation.
         output_dir (pathlib.Path): Directory where the output files are saved.
         run_id (list[str]): Identifier for the run, used to name the output files.
     Returns:
-        list[ResultsIcos]: List of muons reaching the ground per second.
+        list[ResultsIcos | ResultsInflux]: List of muons reaching the ground per second.
     """
-    muon_count: list[ResultsIcos] = []
+    muon_count: list[ResultsIcos | ResultsInflux] = []
     # Each file corresponds to 1s of simulation
     for idx, path in enumerate(output_paths):
         output_file_path = output_dir / f"icos_output_{run_id[idx]}.json"
@@ -100,7 +102,7 @@ def main(
     output_paths: list[pathlib.Path] = []
     # List to store the start_time, end_time, latitude and longitude of each simulation
     output_extra: list[
-        tuple[datetime.datetime, datetime.datetime, float, float, dict[str, Any]]
+        tuple[datetime.datetime, datetime.datetime, float, float, int, dict[str, Any]]
     ] = []
     # Save the run_id to identify the output files
     run_id: list[str] = []
@@ -129,10 +131,13 @@ def main(
                     end_time,
                     latitude,
                     longitude,
-                    density_profile[str(config_pyd.constructor.density_profile.day_idx)],
+                    config_pyd.constructor.density_profile.day_idx,
+                    density_profile[
+                        str(config_pyd.constructor.density_profile.day_idx)
+                    ],
                 )
             )
-            
+
             # Update the save directory in the configuration (Otherwise the new sim will be run in the same directory)
             config_pyd.save_dir = current_save_dir
             # Update the random seed to get different results
