@@ -119,6 +119,8 @@ class RunAct(G4UserRunAction):
 
         # Event start time
         analysisManager.CreateNtupleDColumn("time[s]")
+        # Track start time [From Muons start to the moment they hit the detector]
+        analysisManager.CreateNtupleDColumn("muon_time[s]")
 
         # Create 1d Histogram for the energy spectrum
         # ih = analysisManager.CreateH1("0", "energy spectrum dN/dE = f(E)", 1000, 400, 340000)

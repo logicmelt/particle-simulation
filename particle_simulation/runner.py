@@ -58,6 +58,7 @@ class SimRunner:
             "theta[rad]",
             "phi[rad]",
             "time[s]",
+            "local_time[s]",
         ]
         self.new_header = {
             "x": "x[mm]",
@@ -93,14 +94,27 @@ class SimRunner:
 
         data = pd.concat(
             [
-                pd.read_csv(file_x, skiprows=18, names=self.header)
+                pd.read_csv(file_x, skiprows=19, names=self.header)
                 for file_x in output_files
             ],
             ignore_index=True,
         )
-        # Save the data as csv after sorting it by process_ID, EventID, and TrackID (Priority order)
+        # Sorting it by process_ID, EventID, and TrackID (Priority order)
         data.rename(self.new_header, axis="columns", inplace=True)
         data.sort_values(by=["process_ID", "EventID", "TrackID"], inplace=True)
+        # Add the detector type as virtual
+        data["detector_type"] = "virtual"
+        # Add the latitude and longitude columns
+        data["latitude"] = self.config.constructor.magnetic_field.latitude
+        data["longitude"] = self.config.constructor.magnetic_field.longitude
+        # Add the timestamp as the simulation time + global time of the particle
+        sim_time = self.config.constructor.magnetic_field.mag_time
+        data["timestamp"] = data.apply(
+            lambda row: sim_time.timestamp() + row["time[s]"], axis=1
+        )
+        data["start_time"] = sim_time.strftime("%Y-%m-%dT%H:%M:%S")
+        # Last, add the ref idx to the density profile
+        data["density_day_idx"] = self.config.constructor.density_profile.day_idx
         data.to_csv(self.save_dir / "output.csv", index=False)
         # Remove the individual files
         for file_x in output_files:

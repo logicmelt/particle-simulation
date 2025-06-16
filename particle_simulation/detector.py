@@ -75,6 +75,8 @@ class SensDetector(G4VSensitiveDetector):
 
         # The time since the beginning of the EVENT in SECONDS
         global_time = arg0.GetPreStepPoint().GetGlobalTime() / second
+        # The time since the beginning of the track in SECONDS
+        local_time = arg0.GetPreStepPoint().GetLocalTime() / second
 
         # Estimate the angles
         mom_dir = arg0.GetPreStepPoint().GetMomentumDirection()
@@ -109,6 +111,7 @@ class SensDetector(G4VSensitiveDetector):
         analysisManager.FillNtupleDColumn(11, theta)
         analysisManager.FillNtupleDColumn(12, phi)
         analysisManager.FillNtupleDColumn(13, global_time)
+        analysisManager.FillNtupleDColumn(14, local_time)
 
         # Add to the Ntuple
         analysisManager.AddNtupleRow(0)
