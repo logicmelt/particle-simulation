@@ -3,6 +3,7 @@ import multiprocessing
 import warnings
 import pandas as pd
 import contextlib
+import uuid
 
 from particle_simulation import config
 
@@ -116,7 +117,7 @@ class SimRunner:
         # Last, add the ref idx to the density profile
         data["density_day_idx"] = self.config.constructor.density_profile.day_idx
         # Add run_ID so that the output can be traced back to the run
-        data["run_ID"] = self.config.save_dir.name # The name of the save directory is the run ID
+        data["run_ID"] = str(uuid.uuid4()) # Generate a unique ID for the run
         data.to_csv(self.save_dir / "output.csv", index=False)
         # Remove the individual files
         for file_x in output_files:
