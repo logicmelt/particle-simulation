@@ -56,7 +56,6 @@ def postprocess(
 def main(
     config_pyd: Config,
     sim_cycles: int,
-    time_resolution: int,
     restart_checkpoint: bool = True,
 ) -> None:
     """Main function to run the simulation.
@@ -64,7 +63,6 @@ def main(
     Args:
         config_pyd (Config): Configuration settings.
         sim_cycles (int): Number of times the simulation should be run. Set -1 for continuous simulation.
-        time_resolution (int): Number of seconds covered by one simulation.
         restart_checkpoint (bool, optional): Restart the simulation from the last configuration file. Defaults to True.
     """
     # Get the current save directory for later use
@@ -122,7 +120,7 @@ def main(
             # End time will be the current start time plus time_resolution seconds
             end_time = (
                 config_pyd.constructor.magnetic_field.mag_time
-                + datetime.timedelta(seconds=time_resolution)
+                + datetime.timedelta(seconds=config_pyd.time_resolution)
             )
             # Append to the output_extra list
             output_extra.append(
@@ -194,12 +192,6 @@ def cli_entrypoint() -> None:
         action="store_true",
         help="Restart the simulation from the last configuration file.",
     )
-    parser.add_argument(
-        "--time_resolution",
-        type=int,
-        help="Number of seconds covered by one simulation. Defaults to 1 second.",
-        default=1,
-    )
 
     # Connect the CliSettingsSource to the argparser so that the --help message is generated correctly.
     cli_settings = CliSettingsSource(Config, root_parser=parser)
@@ -219,7 +211,7 @@ def cli_entrypoint() -> None:
         config_parser = Config(**load_config(args.config_file))
 
     # Call the main function
-    main(config_parser, args.sim_cycles, args.time_resolution, args.restart)
+    main(config_parser, args.sim_cycles, args.restart)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,8 @@ num_processes: 1 # Number of processes to be used in the simulation
 macro_files: ["additional_files/macro_files/gps_flat_truncated.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
 particles_per_run: 18750 # Number of particles to be generated per run
-
+time_resolution: 60 # Time resolution in seconds. This is used to: update magnetic field between simulation runs,
+                      # change density profile when a new day starts and to define a timestamp for the output particles.
 # Particle generator
 generator:
   gen_type: "gps" # "gps" or "particle_gun". GPS parameters are given through a macro file

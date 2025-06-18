@@ -259,6 +259,12 @@ class Config(BaseSettings):
         description="Macro files to be executed as a list or a single string"
     )
     save_dir: pathlib.Path = Field(description="Directory to save the output files")
+    time_resolution: float = Field(
+        default=1.0,
+        gt=0,
+        description="Time resolution of the simulation in seconds. This parameter defines\
+            How much time is covered by one simulation (It's not a real time step, just for the output files).",
+    )
 
     @model_validator(mode="after")
     def validate_data(self) -> "Config":

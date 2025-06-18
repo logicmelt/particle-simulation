@@ -4,6 +4,7 @@ import warnings
 import pandas as pd
 import contextlib
 import uuid
+import numpy as np
 
 from particle_simulation import config
 
@@ -108,16 +109,22 @@ class SimRunner:
         # Add the latitude and longitude columns
         data["latitude"] = self.config.constructor.magnetic_field.latitude
         data["longitude"] = self.config.constructor.magnetic_field.longitude
-        # Add the timestamp as the simulation time + global time of the particle
-        sim_time = self.config.constructor.magnetic_field.mag_time
-        data["timestamp"] = data.apply(
-            lambda row: sim_time.timestamp() + row["time[s]"], axis=1
+        # Add a timestamp to the simulation.
+        # This timestamp will be constructed from the start time + a linspace between 0 and config.time_resolution
+        delta_time = np.linspace(
+            0, self.config.time_resolution, len(data), endpoint=False
         )
+        sim_time = self.config.constructor.magnetic_field.mag_time
+        sim_timestamp = sim_time.timestamp()
+        # Add the timestamp to the data
+        # The timestamp is the start time + the delta time
+        data["timestamp"] = sim_timestamp + delta_time
+        # Save the start time in the ISO format
         data["start_time"] = sim_time.strftime("%Y-%m-%dT%H:%M:%S")
         # Last, add the ref idx to the density profile
         data["density_day_idx"] = self.config.constructor.density_profile.day_idx
         # Add run_ID so that the output can be traced back to the run
-        data["run_ID"] = str(uuid.uuid4()) # Generate a unique ID for the run
+        data["run_ID"] = str(uuid.uuid4())  # Generate a unique ID for the run
         data.to_csv(self.save_dir / "output.csv", index=False)
         # Remove the individual files
         for file_x in output_files:
