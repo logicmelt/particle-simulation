@@ -109,8 +109,13 @@ def main(
     try:
         print("Running simulation...")
         while sim_cycles != 0:
-            if sim_cycles % 10 == 0:
-                print(f"Starting simulation: {abs(sim_cycles)}")
+            t_start = datetime.datetime.now()
+            print(f"Starting simulation {abs(sim_cycles)} @ {t_start.isoformat()}")
+            config_pyd.constructor.magnetic_field.mag_time = t_start
+            config_pyd.constructor.density_profile.day_idx = (
+                t_start.timetuple().tm_yday
+            ) % 100
+
             # Create the simulation runner
             runner = SimRunner(config_pyd)
             run_id.append(str(runner.save_dir.name))
@@ -140,13 +145,7 @@ def main(
             config_pyd.save_dir = current_save_dir
             # Update the random seed to get different results
             config_pyd.random_seed += config_pyd.num_processes + 10
-            # Update the time to the new start time
-            config_pyd.constructor.magnetic_field.mag_time = end_time
-            # Change the day for the density profile if the simulation is running for more than 24 hours
-            if end_time.day != start_time.day:
-                config_pyd.constructor.density_profile.day_idx += 1
-                day_diff = end_time.day - start_time.day
-                start_time += datetime.timedelta(days=day_diff)
+
             # Postprocess the output files to get the timeseries of muons and save the results
             postprocess(output_paths, output_extra, output_dir, run_id)
             output_paths, output_extra, run_id = (
@@ -154,6 +153,10 @@ def main(
                 [],
                 [],
             )  # Reset the output paths and extra data for the next cycle
+            t_end = datetime.datetime.now()
+            print(
+                f"Simulation {abs(sim_cycles)} completed @ {t_end.isoformat()} - Duration: {(t_end - t_start).total_seconds()} s"
+            )
             sim_cycles -= 1
     except KeyboardInterrupt:
         print("Simulation interrupted by the user.")
