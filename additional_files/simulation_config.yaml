@@ -1,11 +1,15 @@
 save_dir: "test_data/test_icos" # Directory where the output files will be saved
 random_seed: 42 # Seed for the random number generator
 num_processes: 1 # Number of processes to be used in the simulation
-macro_files: ["additional_files/macro_files/gps_flat_truncated.mac", "additional_files/macro_files/vis_flat.mac"] # Path to the macro files that will be executed, order matters if more than one
+macro_files: [
+    "additional_files/macro_files/gps_flat_truncated.mac",
+    "additional_files/macro_files/vis_flat.mac",
+  ] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
 particles_per_run: 18750 # Number of particles to be generated per run
-time_resolution: 60 # Time resolution in seconds. This is used to: update magnetic field between simulation runs,
-                      # change density profile when a new day starts and to define a timestamp for the output particles.
+time_resolution:
+  60 # Time resolution in seconds. This is used to: update magnetic field between simulation runs,
+  # change density profile when a new day starts and to define a timestamp for the output particles.
 # Particle generator
 generator:
   gen_type: "gps" # "gps" or "particle_gun". GPS parameters are given through a macro file
@@ -13,8 +17,9 @@ generator:
   n_events: 1 # Number of particles to be shoot at one invokation of GeneratePrimaryVertex() method for a particle gun (Same physical quantities)
   energy: 300 # Energy of the primary particle in GeV
   particle: "geantino" # Particle type
-  position: [0, 0, 6441] # Initial position of the primary particle in km
-                          # Remember that this position is with respect the center of the geometry, e.g. for a flat geometry it would be the box's center
+  position:
+    [0, 0, 6441] # Initial position of the primary particle in km
+    # Remember that this position is with respect the center of the geometry, e.g. for a flat geometry it would be the box's center
   direction: [0, 0, -1] # Direction of the momentum of the primary particle
 
 # Detector
@@ -22,20 +27,22 @@ constructor:
   input_geom: custom # "gdml" or "custom". If custom is chosen additional parameters are required.
   gdml_file: "test_data/geometry_flat.gdml" # Path to the GDML file
 
-  magnetic_field: # Parameters for the magnetic field 
+  magnetic_field: # Parameters for the magnetic field
     enabled: True # Enable the magnetic field
     mag_source: "estimated" # "estimated" or "file". If estimated the magnetic field will be calculated from the latitude, longitude and date
-    mag_file: "" # Path to the magnetic field file or "None" if no magnetic field is used
-                                                  # Units should be in nT
+    mag_file:
+      "" # Path to the magnetic field file or "None" if no magnetic field is used
+      # Units should be in nT
     latitude: 42.224 # Latitude of the detector in degrees
     longitude: -8.716 # Longitude of the detector in degrees
     mag_time: "2025-06-10T00:00:00" # Datetime of the magnetic field in YYYY-MM-DDTHH:MM:SS format.
-                            
+
   sensitive_detectors:
     enabled: True # Enable the sensitive detectors
     altitude: [0] # Altitude of the sensitive detectors in km
-    particles: ["mu-"] # List of particles that will be recorded in the sensitive detectors. 
-                                                                      #"all" for all particles.
+    particles:
+      ["mu-"] # List of particles that will be recorded in the sensitive detectors.
+      #"all" for all particles.
 
   # Parameters used to generate the custom geometry
   export_gdml: False # Export the detector to a GDML file. Don't use this option if you are using multiprocessing
@@ -43,14 +50,14 @@ constructor:
   # If the geometry is curved then we need to define the Earth's radius
   earth_radius: 6371 #6371 # Earth's radius in km
   # In both cases we have to define the size of the atmosphere
-  atmos_size: 100 # Atmosphere size in km. It will be the arc lenght at the surface of the Earth for the curved geometry and 
-                  # the square side for the flat geometry
+  atmos_size:
+    100 # Atmosphere size in km. It will be the arc lenght at the surface of the Earth for the curved geometry and
+    # the square side for the flat geometry
   atmos_height: 70 # Atmosphere height in km
   atmos_comp: ["N", 70, "O", 27, "Ar", 3] # Material of the atmosphere
   # atmos_density: "from_file" # "from_file" or "auto".
   atmos_n_points: 100 # Number of points in the density profile (If "from_file" is chosen it will interpolate to the number of points)
-  density_profile: 
+  density_profile:
     density_file: "additional_files/data_files/density_temp_height.json" # Path to the json file with the density profiles.
     day_idx: 0 # Index of the day in the density file
 
-  
