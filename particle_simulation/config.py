@@ -1,4 +1,9 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    SettingsConfigDict,
+    PydanticBaseSettingsSource,
+    CliSettingsSource,
+)
 from pydantic import Field, model_validator, StringConstraints
 from typing import Annotated
 import pathlib
@@ -237,7 +242,7 @@ class Config(BaseSettings):
     """Configuration settings for the simulation."""
 
     # Allow the configuration to be parsed from the command line
-    model_config = SettingsConfigDict(cli_parse_args=True)
+    model_config = SettingsConfigDict(cli_parse_args=True, env_nested_delimiter="__")
     # Random seed from the current time if not provided
     random_seed: int = Field(
         default_factory=lambda: int(time.time()),
@@ -265,6 +270,21 @@ class Config(BaseSettings):
         description="Time resolution of the simulation in seconds. This parameter defines\
             How much time is covered by one simulation (It's not a real time step, just for the output files).",
     )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            env_settings,
+            CliSettingsSource(settings_cls, cli_parse_args=True),
+            init_settings,
+        )
 
     @model_validator(mode="after")
     def validate_data(self) -> "Config":

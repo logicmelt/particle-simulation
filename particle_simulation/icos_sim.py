@@ -212,7 +212,6 @@ def cli_entrypoint() -> None:
     else:
         # Load the configuration file and overwrite the default values
         config_parser = Config(**load_config(args.config_file))
-
     # Call the main function
     main(config_parser, args.sim_cycles, args.restart)
 
