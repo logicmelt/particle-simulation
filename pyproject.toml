@@ -17,6 +17,8 @@ pydantic = "^2.9.2"
 pygeomag = "^1.1.0"
 scipy = "^1.14.1"
 pydantic-settings = "^2.10.1"
+environs = "^14.2.0"
+influxdb-client = {extras = ["extra"], version = "^1.49.0"}
 
 [tool.poetry.scripts]
 icos_sim = "particle_simulation.icos_sim:cli_entrypoint"
