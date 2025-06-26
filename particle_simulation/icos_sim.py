@@ -1,15 +1,20 @@
-from particle_simulation.runner import SimRunner
-from particle_simulation.config import Config
-from particle_simulation.utils import load_config, extract_latitude_longitude
-from particle_simulation.results import ResultsIcos, ResultsInflux
 from typing import Any
 import argparse
 import sys
 import pathlib
-import pandas as pd
 import shutil
 import datetime
 import json
+
+import pandas as pd
+from environs import env
+from influxdb_client import InfluxDBClient
+from influxdb_client.client.write_api import SYNCHRONOUS
+
+from particle_simulation.runner import SimRunner
+from particle_simulation.config import Config
+from particle_simulation.utils import load_config, extract_latitude_longitude
+from particle_simulation.results import ResultsIcos, ResultsInflux
 
 
 def postprocess(
@@ -64,6 +69,9 @@ def main(
         sim_cycles (int): Number of times the simulation should be run. Set -1 for continuous simulation.
         restart_checkpoint (bool, optional): Restart the simulation from the last configuration file. Defaults to True.
     """
+    # Read environment
+    env.read_env()
+
     # Get the current save directory for later use
     current_save_dir = config_pyd.save_dir
 
@@ -105,6 +113,16 @@ def main(
     run_id: list[str] = []
     # If sim_cycles is -1, the simulation will run continuously
     # Simulation is ran as many times as specified in sim_cycles
+
+    influx_client_write_api = None
+    if env.bool("INFLUX_ENABLED", default=False):
+        influx_client = InfluxDBClient(
+            url=f"http://{env.str("INFLUX_HOST")}:{env.str("INFLUX_PORT")}",
+            token=env.str("INFLUX_TOKEN"),
+            org=env.str("INFLUX_ORG"),
+        )
+        influx_client_write_api = influx_client.write_api(write_options=SYNCHRONOUS)
+
     try:
         print("Running simulation...")
         while sim_cycles != 0:
@@ -119,8 +137,22 @@ def main(
             runner = SimRunner(config_pyd)
             run_id.append(str(runner.save_dir.name))
             # Run the simulation
-            file_path = runner.run()
+            file_path, dataframe = runner.run()
             output_paths.append(file_path)
+
+            # Send particle data to influx if enabled
+            if influx_client_write_api:
+                print("Publishing results to Influx")
+                dataframe["timestamp"] = dataframe["timestamp"] * 1e6
+                influx_df = dataframe.set_index("timestamp")
+                influx_client_write_api.write(
+                    bucket=env.str("INFLUX_BUCKET"),
+                    record=influx_df,
+                    data_frame_measurement_name="particle",
+                    write_precision="us",
+                    data_frame_tag_columns=["run_ID", "detector_type"],
+                )
+
             # End time will be the current start time plus time_resolution seconds
             end_time = (
                 config_pyd.constructor.magnetic_field.mag_time

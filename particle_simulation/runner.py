@@ -71,7 +71,7 @@ class SimRunner:
             "pz": "pz[MeV]",
         }
 
-    def run(self) -> pathlib.Path:
+    def run(self) -> tuple[pathlib.Path, pd.DataFrame]:
         """Run the simulation.
 
         Returns:
@@ -130,7 +130,7 @@ class SimRunner:
         for file_x in output_files:
             file_x.unlink()
 
-        return self.save_dir / "output.csv"
+        return self.save_dir / "output.csv", data
 
     def simulation(self, process_num: int) -> int:
         # Create a logger
