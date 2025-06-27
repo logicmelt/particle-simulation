@@ -57,19 +57,11 @@ class SimRunner:
             "x",
             "y",
             "z",
-            "theta[rad]",
-            "phi[rad]",
-            "time[s]",
-            "local_time[s]",
+            "theta",
+            "phi",
+            "time",
+            "local_time",
         ]
-        self.new_header = {
-            "x": "x[mm]",
-            "y": "y[mm]",
-            "z": "z[mm]",
-            "px": "px[MeV]",
-            "py": "py[MeV]",
-            "pz": "pz[MeV]",
-        }
 
     def run(self) -> tuple[pathlib.Path, pd.DataFrame]:
         """Run the simulation.
@@ -102,7 +94,6 @@ class SimRunner:
             ignore_index=True,
         )
         # Sorting it by process_ID, EventID, and TrackID (Priority order)
-        data.rename(self.new_header, axis="columns", inplace=True)
         data.sort_values(by=["process_ID", "EventID", "TrackID"], inplace=True)
         # Add the detector type as virtual
         data["detector_type"] = "virtual"

@@ -6,6 +6,7 @@ All available parameters are:
 
 - save_dir (str, **Required**): Directory to save the output files.
 - random_seed (int, Optional): Random seed for reproducibility. If not provided, it will be set to the current time.
+- time_resolution (float, Optional): Time resolution of the simulation in seconds. This parameter defines how much time is covered by one      simulation (It's not a real time step, just for the output files).
 - num_processes (int, Optional): Number of processes to use for simulation. Defaults to 1.
 - macro_files (list[str] | str, **Required**): Macro files to be executed as a list or a single string. Order matters if more than one file.
 - logger_level (str, Optional): Logger level ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]. Defaults to "INFO".
