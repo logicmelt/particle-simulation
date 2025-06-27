@@ -8,7 +8,7 @@ import json
 
 import pandas as pd
 from environs import env
-from influxdb_client import InfluxDBClient
+from influxdb_client import InfluxDBClient  # type: ignore
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 from particle_simulation.runner import SimRunner
@@ -143,20 +143,19 @@ def main(
             # Send particle data to influx if enabled
             if influx_client_write_api:
                 print("Publishing results to Influx")
-                dataframe["timestamp"] = dataframe["timestamp"] * 1e6
                 influx_df = dataframe.set_index("timestamp")
                 influx_client_write_api.write(
                     bucket=env.str("INFLUX_BUCKET"),
                     record=influx_df,
                     data_frame_measurement_name="particle",
-                    write_precision="us",
+                    write_precision="us",  # type: ignore
                     data_frame_tag_columns=["run_ID", "detector_type"],
                 )
 
-            # End time will be the current start time plus time_resolution seconds
+            # End time will be the current start time plus time_resolution microseconds
             end_time = (
                 config_pyd.constructor.magnetic_field.mag_time
-                + datetime.timedelta(seconds=config_pyd.time_resolution)
+                + datetime.timedelta(microseconds=config_pyd.time_resolution)
             )
             # Append to the output_extra list
             output_extra.append(

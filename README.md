@@ -12,7 +12,7 @@ poetry install --no-root
 
 ## Simulation
 
-With the package installed, it can be run both by API and CLI-based commands.
+With the package installed, it can be run by API, CLI-based commands and environmental variables.
 
 ```python
 import particle_simulation.config as config
@@ -42,3 +42,8 @@ particle_sim --random_seed 42 --constructor.sensitive_detectors.enabled True
 particle_sim --config_file additional_files/simulation_config.yaml --random_seed 648 --constructor.sensitive_detectors.enabled False
 ```
 Within the save directory the log and results (as .csv) will be stored alongisde the configuration file as json. 
+
+Environmental variables are given the maximum priority. Parameters can be modified as follows:
+```bash
+export CONSTRUCTOR__MAGNETIC_FIELD__LATITUDE=42.22999057056635
+```

@@ -265,9 +265,9 @@ class Config(BaseSettings):
     )
     save_dir: pathlib.Path = Field(description="Directory to save the output files")
     time_resolution: float = Field(
-        default=1.0,
+        default=1e6,
         gt=0,
-        description="Time resolution of the simulation in seconds. This parameter defines\
+        description="Time resolution of the simulation in microseconds. This parameter defines\
             How much time is covered by one simulation (It's not a real time step, just for the output files).",
     )
 

@@ -6,12 +6,11 @@ All available parameters are:
 
 - save_dir (str, **Required**): Directory to save the output files.
 - random_seed (int, Optional): Random seed for reproducibility. If not provided, it will be set to the current time.
-- time_resolution (float, Optional): Time resolution of the simulation in seconds. This parameter defines how much time is covered by one      simulation (It's not a real time step, just for the output files).
 - num_processes (int, Optional): Number of processes to use for simulation. Defaults to 1.
 - macro_files (list[str] | str, **Required**): Macro files to be executed as a list or a single string. Order matters if more than one file.
 - logger_level (str, Optional): Logger level ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]. Defaults to "INFO".
 - particles_per_run (int, Optional): Number of particles to be generated per run. Defaults to 1.
-- time_resolution (intm Optional): Time resolution in seconds. This is used to: update magnetic field between simulation runs, change density profile when a new day starts and to define a timestamp for the output particles. Defaults to 1s.
+- time_resolution (float, Optional): Time resolution in microseconds. This is used to: update magnetic field between simulation runs, change density profile when a new day starts and to define a timestamp for the output particles. Defaults to 1s.
 - generator:
   - gen_type (str, Optional): Type of generator to use: gps or particle_gun. Defaults to gps.
   - n_events (int, Optional): Number of particles to be shoot at one invokation of GeneratePrimaryVertex() method for a particle gun (Same physical quantities). Defaults to 1.

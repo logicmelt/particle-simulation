@@ -84,7 +84,7 @@ class SimRunner:
             len(output_files) == 0
         ):  # No files were generated so no particles reached the sensitive detectors
             warnings.warn("No particles were generated with the given configuration")
-            return pathlib.Path("")
+            return pathlib.Path(""), pd.DataFrame()
 
         data = pd.concat(
             [
@@ -106,7 +106,8 @@ class SimRunner:
             0, self.config.time_resolution, len(data), endpoint=False
         )
         sim_time = self.config.constructor.magnetic_field.mag_time
-        sim_timestamp = sim_time.timestamp()
+
+        sim_timestamp = sim_time.timestamp() * 1e6  # Convert to microseconds
         # Add the timestamp to the data
         # The timestamp is the start time + the delta time
         data["timestamp"] = sim_timestamp + delta_time
