@@ -1,8 +1,13 @@
 FROM python:3.12.6
 
-# Set env variables
-# Set Geant4 environment variables
-ENV G4NEUTRONHPDATA=/data/G4NDL4.7 \
+# Environment Variables
+    # Python
+ENV PYTHONUNBUFFERED=1 \
+    # Poetry
+    POETRY_VIRTUALENVS_CREATE=false \ 
+    POETRY_HOME="/opt/poetry" \
+    # Geant4
+    G4NEUTRONHPDATA=/data/G4NDL4.7 \
     G4LEDATA=/data/G4EMLOW8.5 \
     G4LEVELGAMMADATA=/data/PhotonEvaporation5.7 \
     G4RADIOACTIVEDATA=/data/RadioactiveDecay5.6 \
@@ -12,17 +17,14 @@ ENV G4NEUTRONHPDATA=/data/G4NDL4.7 \
     G4SAIDXSDATA=/data/G4SAIDDATA2.0 \
     G4ABLADATA=/data/G4ABLA3.3 \
     G4INCLDATA=/data/G4INCL1.2 \
-    G4ENSDFSTATEDATA=/data/G4ENSDFSTATE2.3
-
-# Poetry env variables
-ENV POETRY_VIRTUALENVS_CREATE=false \ 
-    POETRY_HOME="/opt/poetry" 
-ENV PATH="$POETRY_HOME/bin:$POETRY_HOME/venv:$PATH"
+    G4ENSDFSTATEDATA=/data/G4ENSDFSTATE2.3 \
+    # Path
+    PATH="/opt/poetry/bin:/opt/poetry/venv:$PATH"
 
 # Change to the app directory
 WORKDIR /app
 
-# Stuff needed for openGL
+# Stuff needed for OpenGL
 RUN apt update \
     && apt install -y --no-install-recommends libsm6 libxext6 \
         ffmpeg libfontconfig1 libxrender1 libgl1-mesa-glx \
