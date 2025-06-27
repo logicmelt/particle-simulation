@@ -149,26 +149,26 @@ class ResultsIcos(BaseModel):
         output_data["detector_type"] = "virtual"
 
         # Get the mean zenith and azimuth
-        output_data["mean_zenith"] = data[0]["theta[rad]"].mean()
-        output_data["mean_azimuth"] = data[0]["phi[rad]"].mean()
+        output_data["mean_zenith"] = data[0]["theta"].mean()
+        output_data["mean_azimuth"] = data[0]["phi"].mean()
 
         # Get the variance of the zenith and azimuth
-        output_data["variance_zenith"] = data[0]["theta[rad]"].var()
-        output_data["variance_azimuth"] = data[0]["phi[rad]"].var()
+        output_data["variance_zenith"] = data[0]["theta"].var()
+        output_data["variance_azimuth"] = data[0]["phi"].var()
 
         # Get the skewness of the zenith and azimuth
         # Use these instead of pandas skewness because here we can control better the parameters
         # In fact, by default the results are not the same, all the pandas estimations are automatically
         # corrected for statistical bias whereas scipy.stats.skew is not (unless you specify the bias=False)
-        output_data["skewness_zenith"] = scipy.stats.skew(data[0]["theta[rad]"])
-        output_data["skewness_azimuth"] = scipy.stats.skew(data[0]["phi[rad]"])
+        output_data["skewness_zenith"] = scipy.stats.skew(data[0]["theta"])
+        output_data["skewness_azimuth"] = scipy.stats.skew(data[0]["phi"])
 
         # Get the kurtosis of the zenith and azimuth
-        output_data["kurtosis_zenith"] = scipy.stats.kurtosis(data[0]["theta[rad]"])
-        output_data["kurtosis_azimuth"] = scipy.stats.kurtosis(data[0]["phi[rad]"])
+        output_data["kurtosis_zenith"] = scipy.stats.kurtosis(data[0]["theta"])
+        output_data["kurtosis_azimuth"] = scipy.stats.kurtosis(data[0]["phi"])
 
         # The relative time
-        output_data["relative_time"] = data[0]["time[s]"].mean()
+        output_data["relative_time"] = data[0]["time"].mean()
 
         # And the average multiplicity
         output_data["multiplicity"] = cls.get_multiplicity(data[0])
