@@ -144,12 +144,14 @@ def main(
             if influx_client_write_api:
                 print("Publishing results to Influx")
                 influx_df = dataframe.set_index("timestamp")
+                # Add detector_id to the dataframe before writing to InfluxDB
+                influx_df["detector_id"] = env.str("DETECTOR_ID")
                 influx_client_write_api.write(
                     bucket=env.str("INFLUX_BUCKET"),
                     record=influx_df,
                     data_frame_measurement_name="particle",
                     write_precision="us",  # type: ignore
-                    data_frame_tag_columns=["run_ID", "detector_type"],
+                    data_frame_tag_columns=["run_ID", "detector_type", "detector_id"],
                 )
 
             # End time will be the current start time plus time_resolution microseconds
