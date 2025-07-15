@@ -5,6 +5,7 @@ import pathlib
 import shutil
 import datetime
 import json
+from uuid import uuid4
 
 import pandas as pd
 from environs import env
@@ -123,6 +124,8 @@ def main(
         )
         influx_client_write_api = influx_client.write_api(write_options=SYNCHRONOUS)
 
+    detector_id = env.str("DETECTOR_ID", default=f"simulator-{uuid4()}")
+
     try:
         print("Running simulation...")
         while sim_cycles != 0:
@@ -145,7 +148,7 @@ def main(
                 print("Publishing results to Influx")
                 influx_df = dataframe.set_index("timestamp")
                 # Add detector_id to the dataframe before writing to InfluxDB
-                influx_df["detector_id"] = env.str("DETECTOR_ID")
+                influx_df["detector_id"] = detector_id
                 influx_client_write_api.write(
                     bucket=env.str("INFLUX_BUCKET"),
                     record=influx_df,
