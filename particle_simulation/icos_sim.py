@@ -127,7 +127,7 @@ def main(
     detector_id = env.str("DETECTOR_ID", default=f"simulator-{uuid4()}")
 
     try:
-        print("Running simulation...")
+        print(f"Running simulation - Detector Id: {detector_id}")
         while sim_cycles != 0:
             t_start = datetime.datetime.now()
             print(f"Starting simulation {abs(sim_cycles)} @ {t_start.isoformat()}")
