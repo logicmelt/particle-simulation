@@ -1,5 +1,10 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, model_validator, StringConstraints, computed_field
+from pydantic_settings import (
+    BaseSettings,
+    SettingsConfigDict,
+    PydanticBaseSettingsSource,
+    CliSettingsSource,
+)
+from pydantic import Field, model_validator, StringConstraints
 from typing import Annotated
 import pathlib
 import time
@@ -141,6 +146,7 @@ class MagneticFieldConfig(BaseSettings):
         description=(
             "File containing the magnetic field as a csv with 7 columns:"
             "Bx, By, Bz, altitude, latitude, longitude and date"
+            "Or a txt file with paths to the csv files, the start time and ent time of each file"
         ),
     )
     latitude: float = Field(
@@ -157,16 +163,16 @@ class MagneticFieldConfig(BaseSettings):
         description="Longitude of the detector in decimal degrees (World Geodetic System 1984)."
         "Positive east of the prime meridian (default: -8.716).",
     )
-    mag_time: datetime.date = Field(
-        default=datetime.date(2021, 1, 1),
-        description="Date to get the magnetic field values. Format YYYY-MM-DD.",
+    mag_time: datetime.datetime = Field(
+        default=datetime.datetime(2021, 1, 1),
+        description="Date to get the magnetic field values. Format YYYY-MM-DDTHH:MM:SS.",
     )
 
-    @computed_field
     @property
     def decimal_year(self) -> float:
         """Return the decimal year from a date in format YYYY-MM-DD."""
-        return self.transform_to_decimal_year(self.mag_time)
+        # Precision of days so we use only the date
+        return self.transform_to_decimal_year(self.mag_time.date())
 
     def transform_to_decimal_year(self, date: datetime.date) -> float:
         """Return the decimal year from a date in format YYYY-MM-DD.
@@ -236,7 +242,7 @@ class Config(BaseSettings):
     """Configuration settings for the simulation."""
 
     # Allow the configuration to be parsed from the command line
-    model_config = SettingsConfigDict(cli_parse_args=True)
+    model_config = SettingsConfigDict(cli_parse_args=True, env_nested_delimiter="__")
     # Random seed from the current time if not provided
     random_seed: int = Field(
         default_factory=lambda: int(time.time()),
@@ -258,6 +264,27 @@ class Config(BaseSettings):
         description="Macro files to be executed as a list or a single string"
     )
     save_dir: pathlib.Path = Field(description="Directory to save the output files")
+    time_resolution: float = Field(
+        default=1e6,
+        gt=0,
+        description="Time resolution of the simulation in microseconds. This parameter defines\
+            How much time is covered by one simulation (It's not a real time step, just for the output files).",
+    )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            env_settings,
+            CliSettingsSource(settings_cls, cli_parse_args=True),
+            init_settings,
+        )
 
     @model_validator(mode="after")
     def validate_data(self) -> "Config":
@@ -282,9 +309,14 @@ class Config(BaseSettings):
             ), f"GDML File {self.constructor.gdml_file} not found"
 
         if self.constructor.magnetic_field.mag_source == "file":
-            assert (
-                self.constructor.magnetic_field.mag_file.is_file()
-            ), f"Magnetic field file {self.constructor.magnetic_field.mag_file} not found"
+            if self.constructor.magnetic_field.mag_file.suffix == ".csv":
+                assert (
+                    self.constructor.magnetic_field.mag_file.is_file()
+                ), f"Magnetic field file {self.constructor.magnetic_field.mag_file} not found"
+            elif self.constructor.magnetic_field.mag_file.suffix == ".txt":
+                assert (
+                    self.constructor.magnetic_field.mag_file.is_file()
+                ), f"List of magnetic fields files {self.constructor.magnetic_field.mag_file} not found"
 
         assert (
             self.constructor.density_profile.density_file.is_file()

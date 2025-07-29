@@ -22,7 +22,7 @@ from geant4_pybind import (
 )
 
 # Import units
-from geant4_pybind import kelvin, kg, m3, perCent, radian, km, mm, tesla
+from geant4_pybind import kelvin, kg, m3, perCent, radian, km, mm, tesla, pascal
 
 from particle_simulation.config import Config, MagneticFieldConfig
 from pygeomag import GeoMag
@@ -134,7 +134,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             self.export_gdml = self.config.export_gdml
 
             # Define the density, temperature and materials
-            self.density, self.temp, self.inter_heights = (
+            self.density, self.temp, self.pressure, self.inter_heights = (
                 self.parse_density_temp_from_config()
             )
             self.material, self.world_material = self.define_materials()
@@ -255,13 +255,36 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                     time=mag_config.decimal_year,
                 )
                 # Change to -z because the magnetic field is defined positive towards the center of the earth
+                assert result.z is not None
                 mag_field[i] = (
                     np.array([result.x, result.y, -result.z]) * 1e-9
                 )  # nT to Tesla
             return mag_field
         else:
             self.logger.info(f"Reading the magnetic field from {mag_config.mag_file}")
-            open_csv = pd.read_csv(mag_config.mag_file)
+            # If the file is a txt then it contains the paths to the csv files + the times
+            if mag_config.mag_file.suffix == ".txt":
+                # Open the txt file: two columns
+                file_paths, st_times, end_times = np.loadtxt(
+                    mag_config.mag_file, unpack=True, dtype=str
+                )
+                # Transform the times to datetime objects
+                st_times = pd.to_datetime(st_times, format="%Y-%m-%dT%H:%M:%S.%f")
+                end_times = pd.to_datetime(end_times, format="%Y-%m-%dT%H:%M:%S.%f")
+                # Search for the file that corresponds to the date by checking if the date is between the start and end times
+                mag_start_time = mag_config.mag_time
+                file_pos = np.where(
+                    (mag_start_time >= st_times) & (mag_start_time < end_times)
+                )[0]
+                if len(file_pos) == 0:
+                    raise ValueError(
+                        "The date is not in the range of the provided magnetic field files."
+                    )
+                csv_fil = mag_config.mag_file.parent / file_paths[file_pos[0]]
+                self.logger.info(f"Reading from csv file: {csv_fil}")
+            else:
+                csv_fil = mag_config.mag_file
+            open_csv = pd.read_csv(csv_fil)
             # Transforms the values from nT to Tesla
             open_csv[["x", "y", "z"]] = open_csv[["x", "y", "z"]] * 1e-9
             # And the km column using the geant4 System of units
@@ -309,6 +332,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
             logicAtmos[i] = G4LogicalVolume(
                 solidAtmos[i], self.material[i], "logicAtmos_" + str(i)
             )
+
             # Add the values of the altitude limits
             self.altitude_limits[i] = [
                 i * self.atmosphere_height / self.density_points
@@ -599,6 +623,7 @@ class DetectorConstruction(G4VUserDetectorConstruction):
                 len(comp) // 2,
                 state=G4State.kStateGas,
                 temp=self.temp[i] * kelvin,
+                pressure=self.pressure[i] * pascal,  # Convert Pa to bar
             )
 
         # Add the elements to the material
@@ -610,11 +635,12 @@ class DetectorConstruction(G4VUserDetectorConstruction):
 
     def parse_density_temp_from_config(
         self,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Parse the density and temperature from the configuration file.
 
         Returns:
-            tuple[np.ndarray, np.ndarray, np.ndarray]: The density, temperature and height of the atmosphere layers interpolated from the file.
+            tuple[np.ndarray, np.ndarray, np.ndarray]: The density [kg/m3], temperature [K], pressure [Pa] and height [mm]
+            of the atmosphere layers interpolated from the file.
         """
 
         # Read the density and temperature profile from the json file
@@ -628,7 +654,31 @@ class DetectorConstruction(G4VUserDetectorConstruction):
         density = data_day[:, 2]
         # Interpolate the density and temperature to the height of the atmosphere
         inter_height = np.linspace(0, self.atmosphere_height, self.density_points)
+        if height[-1] < 70 * km:
+            # If the height is less than 70 km, we need to add a point at 70 km
+            # From the International Standard Atmosphere (ISA)
+            # https://en.wikipedia.org/wiki/International_Standard_Atmosphere
+            temp = np.append(temp, 214.65)  # K
+            density = np.append(density, 0.0001)  # kg/m^3
+            height = np.append(height, 70 * km)
         density = np.interp(inter_height, height, density)
         temp = np.interp(inter_height, height, temp)
+        pressure = self.get_pressure_from_ideal_gas(temp, density)
 
-        return density, temp, inter_height
+        return density, temp, pressure, inter_height
+
+    def get_pressure_from_ideal_gas(
+        self, temperature: np.ndarray, density: np.ndarray
+    ) -> np.ndarray:
+        """Calculate the pressure from the ideal gas law.
+
+        Args:
+            temperature (float): Temperature in Kelvin.
+            density (float): Density in kg/m^3.
+        Returns:
+            np.ndarray: Pressure in Pa.
+        """
+        # Ideal gas law: P = rho * R * T
+        # R is the specific gas constant for air: 287.0528 J/(kg*K)
+        R = 287.0528  # J/(kg*K)
+        return density * R * temperature

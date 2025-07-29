@@ -16,10 +16,8 @@ from geant4_pybind import (
 )
 from particle_simulation.generator import GPSGenerator, ParticleGunGenerator
 from particle_simulation.config import Config
-from typing import Any
 
 import logging
-import pathlib
 
 GENERATORS = {"gps": GPSGenerator, "particle_gun": ParticleGunGenerator}
 
@@ -108,12 +106,21 @@ class RunAct(G4UserRunAction):
         analysisManager.CreateNtupleIColumn("particleID")
 
         # Momentum and Position
-        analysisManager.CreateNtupleDColumn("px[MeV]")
-        analysisManager.CreateNtupleDColumn("py[MeV]")
-        analysisManager.CreateNtupleDColumn("pz[MeV]")
-        analysisManager.CreateNtupleDColumn("x[mm]")
-        analysisManager.CreateNtupleDColumn("y[mm]")
-        analysisManager.CreateNtupleDColumn("z[mm]")
+        analysisManager.CreateNtupleDColumn("px")
+        analysisManager.CreateNtupleDColumn("py")
+        analysisManager.CreateNtupleDColumn("pz")
+        analysisManager.CreateNtupleDColumn("x")
+        analysisManager.CreateNtupleDColumn("y")
+        analysisManager.CreateNtupleDColumn("z")
+
+        # Angles of the particles
+        analysisManager.CreateNtupleDColumn("theta")
+        analysisManager.CreateNtupleDColumn("phi")
+
+        # Event start time
+        analysisManager.CreateNtupleDColumn("time")
+        # Track start time [From Muons start to the moment they hit the detector]
+        analysisManager.CreateNtupleDColumn("muon_time")
 
         # Create 1d Histogram for the energy spectrum
         # ih = analysisManager.CreateH1("0", "energy spectrum dN/dE = f(E)", 1000, 400, 340000)

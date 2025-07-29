@@ -5,8 +5,11 @@ from geant4_pybind import (
     G4AnalysisManager,
     G4RunManager,
     fStopAndKill,
+    rad,
+    second,
 )
 from particle_simulation.config import ConstructorConfig
+import numpy as np
 import logging
 
 
@@ -70,6 +73,23 @@ class SensDetector(G4VSensitiveDetector):
         momentum = arg0.GetPreStepPoint().GetMomentum()
         position = arg0.GetPreStepPoint().GetPosition()
 
+        # The time since the beginning of the EVENT in SECONDS
+        global_time = arg0.GetPreStepPoint().GetGlobalTime() / second
+        # The time since the beginning of the track in SECONDS
+        local_time = arg0.GetPreStepPoint().GetLocalTime() / second
+
+        # Estimate the angles
+        mom_dir = arg0.GetPreStepPoint().GetMomentumDirection()
+        # If the particle is going down, flip the momentum direction
+        # This is needed because otherwise the zenith angle will be estimated
+        # assuming a point below the surface (Vector is pointing down and the normal to the surface is up)
+        if mom_dir.z < 0:
+            mom_dir.x, mom_dir.y, mom_dir.z = -mom_dir.x, -mom_dir.y, -mom_dir.z
+        # Zenith angle
+        theta = mom_dir.getTheta() / rad
+        # Azimuthal angle
+        phi = mom_dir.getPhi() / rad
+
         # If the particle has reached the ground level, stop the track
         # Otherwise we might have double counting of particles
         z_pos = position.z - self.correction_factor
@@ -88,6 +108,10 @@ class SensDetector(G4VSensitiveDetector):
         analysisManager.FillNtupleDColumn(8, position.x)
         analysisManager.FillNtupleDColumn(9, position.y)
         analysisManager.FillNtupleDColumn(10, position.z - self.correction_factor)
+        analysisManager.FillNtupleDColumn(11, theta)
+        analysisManager.FillNtupleDColumn(12, phi)
+        analysisManager.FillNtupleDColumn(13, global_time)
+        analysisManager.FillNtupleDColumn(14, local_time)
 
         # Add to the Ntuple
         analysisManager.AddNtupleRow(0)

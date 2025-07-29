@@ -1,6 +1,10 @@
 import pathlib
 import multiprocessing
+import warnings
 import pandas as pd
+import contextlib
+import uuid
+import numpy as np
 
 from particle_simulation import config
 
@@ -39,6 +43,7 @@ class SimRunner:
             f.write(self.config.model_dump_json(indent=4))
         # Get the number of processes
         self.num_processes = self.config.num_processes
+        # assert self.num_processes > 1, "The number of processes must be greater than 1 or geant4 will crash due to"
         # Create the header for the output file
         self.header = [
             "EventID",
@@ -52,21 +57,23 @@ class SimRunner:
             "x",
             "y",
             "z",
+            "theta",
+            "phi",
+            "time",
+            "local_time",
         ]
-        self.new_header = {
-            "x": "x[mm]",
-            "y": "y[mm]",
-            "z": "z[mm]",
-            "px": "px[MeV]",
-            "py": "py[MeV]",
-            "pz": "pz[MeV]",
-        }
 
-    def run(self) -> None:
-        # Run the simulation in parallel if the number of processes is greater than 1
-        if self.num_processes == 1:
-            self.simulation(1)
-        else:
+    def run(self) -> tuple[pathlib.Path, pd.DataFrame]:
+        """Run the simulation.
+
+        Returns:
+            pathlib.Path: The path to the output file.
+        """
+        # Run the simulation in parallel.
+        # This is used even for num_processes = 1 because Geant4 has trouble with the Manager being created twice
+        # in the main thread https://geant4-forum.web.cern.ch/t/problem-calling-twice-to-runmanger/1288.
+        # It's easier to just use multiprocessing.Pool
+        with contextlib.redirect_stdout(None):  # Suppress the output of the simulation
             list_processes = iter(range(1, self.num_processes + 1))
             with multiprocessing.Pool(self.num_processes) as pool:
                 pool.map(self.simulation, list_processes)
@@ -76,22 +83,46 @@ class SimRunner:
         if (
             len(output_files) == 0
         ):  # No files were generated so no particles reached the sensitive detectors
-            raise Warning("No particles were generated with the given configuration")
+            warnings.warn("No particles were generated with the given configuration")
+            return pathlib.Path(""), pd.DataFrame()
 
         data = pd.concat(
             [
-                pd.read_csv(file_x, skiprows=15, names=self.header)
+                pd.read_csv(file_x, skiprows=19, names=self.header)
                 for file_x in output_files
             ],
             ignore_index=True,
         )
-        # Save the data as csv after sorting it by process_ID, EventID, and TrackID (Priority order)
-        data.rename(self.new_header, axis="columns", inplace=True)
+        # Sorting it by process_ID, EventID, and TrackID (Priority order)
         data.sort_values(by=["process_ID", "EventID", "TrackID"], inplace=True)
+        # Add the detector type as virtual
+        data["detector_type"] = "virtual"
+        # Add the latitude and longitude columns
+        data["latitude"] = self.config.constructor.magnetic_field.latitude
+        data["longitude"] = self.config.constructor.magnetic_field.longitude
+        # Add a timestamp to the simulation.
+        # This timestamp will be constructed from the start time + a linspace between 0 and config.time_resolution
+        delta_time = np.linspace(
+            0, self.config.time_resolution, len(data), endpoint=False
+        )
+        sim_time = self.config.constructor.magnetic_field.mag_time
+
+        sim_timestamp = sim_time.timestamp() * 1e6  # Convert to microseconds
+        # Add the timestamp to the data
+        # The timestamp is the start time + the delta time
+        data["timestamp"] = sim_timestamp + delta_time
+        # Save the start time in the ISO format
+        data["start_time"] = sim_time.strftime("%Y-%m-%dT%H:%M:%S")
+        # Last, add the ref idx to the density profile
+        data["density_day_idx"] = self.config.constructor.density_profile.day_idx
+        # Add run_ID so that the output can be traced back to the run
+        data["run_ID"] = str(uuid.uuid4())  # Generate a unique ID for the run
         data.to_csv(self.save_dir / "output.csv", index=False)
         # Remove the individual files
         for file_x in output_files:
             file_x.unlink()
+
+        return self.save_dir / "output.csv", data
 
     def simulation(self, process_num: int) -> int:
         # Create a logger

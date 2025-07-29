@@ -6,7 +6,7 @@ macro_files: [
     "additional_files/macro_files/vis_flat.mac",
   ] # Path to the macro files that will be executed, order matters if more than one
 logger_level: "DEBUG" # "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL"
-particles_per_run: 18750 # Number of particles to be generated per run
+particles_per_run: 200 # Number of particles to be generated per run
 time_resolution:
   60000000 # Time resolution in microseconds. This is used to: update magnetic field between simulation runs,
   # change density profile when a new day starts and to define a timestamp for the output particles.
@@ -60,4 +60,3 @@ constructor:
   density_profile:
     density_file: "additional_files/data_files/density_temp_height.json" # Path to the json file with the density profiles.
     day_idx: 0 # Index of the day in the density file
-

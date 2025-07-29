@@ -1,1 +1,1 @@
-docker run -it -v ./test_data:/app/test_data particle_simulation
+docker run -it -v ./test_data/docker:/app/test_data particle_simulation

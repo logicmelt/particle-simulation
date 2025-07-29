@@ -7,6 +7,7 @@ import yaml
 import pathlib
 import os
 import re
+import datetime
 from typing import Any
 
 LOGGER_LEVEL: dict[str, int] = {
@@ -18,11 +19,11 @@ LOGGER_LEVEL: dict[str, int] = {
 }
 
 
-def load_config(config_file: str) -> dict[str, Any]:
+def load_config(config_file: str | pathlib.Path) -> dict[str, Any]:
     """Loads a configuration file in YAML or JSON format.
 
     Args:
-        config_file (str): The path to the configuration file.
+        config_file (str | pathlib.Path): The path to the configuration file.
 
     Returns:
         dict[str, Any]: The configuration file read as a dictionary.
@@ -37,6 +38,29 @@ def load_config(config_file: str) -> dict[str, Any]:
     else:
         raise ValueError("The configuration file must be in JSON or YAML format.")
     return config
+
+
+def extract_latitude_longitude(
+    path_csv: str | pathlib.Path,
+) -> tuple[float, float, datetime.datetime]:
+    """Extracts the latitude and longitude from a CSV file.
+
+    Args:
+        path_csv (str | pathlib.Path): Path to the CSV file.
+
+    Returns:
+        tuple[float, float]: Latitude, longitude and the date.
+    """
+    path_csv = pathlib.Path(path_csv) if isinstance(path_csv, str) else path_csv
+    # Check if the file is a csv file or a txt file
+    if path_csv.suffix == ".txt":
+        # If it's a txt then we need to read the first line to get one random csv file
+        with open(path_csv, "r") as f:
+            line = f.readline().split(" ")[0]
+        path_csv = path_csv.parent / line
+    df = pd.read_csv(path_csv)
+    date_val = datetime.datetime.strptime(df["date"].values[0], "%Y-%m-%d")
+    return df["latitude"].values[0], df["longitude"].values[0], date_val
 
 
 def create_logger(

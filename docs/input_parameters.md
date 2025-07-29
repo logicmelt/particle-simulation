@@ -10,6 +10,7 @@ All available parameters are:
 - macro_files (list[str] | str, **Required**): Macro files to be executed as a list or a single string. Order matters if more than one file.
 - logger_level (str, Optional): Logger level ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]. Defaults to "INFO".
 - particles_per_run (int, Optional): Number of particles to be generated per run. Defaults to 1.
+- time_resolution (float, Optional): Time resolution in microseconds. This is used to: update magnetic field between simulation runs, change density profile when a new day starts and to define a timestamp for the output particles. Defaults to 1s.
 - generator:
   - gen_type (str, Optional): Type of generator to use: gps or particle_gun. Defaults to gps.
   - n_events (int, Optional): Number of particles to be shoot at one invokation of GeneratePrimaryVertex() method for a particle gun (Same physical quantities). Defaults to 1.
